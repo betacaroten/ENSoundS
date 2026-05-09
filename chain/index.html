@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ENS Chain Player</title>
+  <link rel="stylesheet" href="src/style.css" />
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <h1>ENS Chain Player</h1>
+    </header>
+    <div class="block-line">
+      <span class="live-dot" id="live-dot"></span>
+      <span>block</span>
+      <code id="block-number">—</code>
+      <span class="muted">· mainnet</span>
+    </div>
+
+    <section class="now" id="now-playing-row">
+      <div class="label">now playing</div>
+      <div class="name" id="now-playing">—</div>
+      <div class="char-viz" id="char-viz" aria-hidden="true"></div>
+      <div class="queue" id="queue"></div>
+    </section>
+
+    <div class="controls">
+      <button id="start" class="primary">▶ Start</button>
+      <button id="stop" class="hidden">■ Stop</button>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <section class="recent">
+      <h2>Recent</h2>
+      <ul id="recent-list"></ul>
+    </section>
+
+    <details class="settings">
+      <summary>Settings</summary>
+      <div class="field">
+        <label for="rpc-url">RPC URL</label>
+        <input id="rpc-url" type="text" placeholder="(empty = public fallback)" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="hint">Leave blank to use a rotating list of public RPCs. Paste an Alchemy/Infura/Quicknode URL for reliability.</div>
+      <div class="field">
+        <label for="queue-depth">Queue depth</label>
+        <input id="queue-depth" type="range" min="1" max="30" step="1" />
+        <span class="val" id="queue-depth-val"></span>
+      </div>
+    </details>
+
+  </main>
+  <script type="module" src="src/chain.js"></script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 import { renderStrudel } from "../../lib/generator.js";
 import { SCALE_POOL, SYNTHS } from "../../lib/mapping.js";
 import { defaults } from "../../lib/defaults.js";
+import { mountCharViz, animateCharViz, clearCharViz } from "../../lib/charviz.js";
 
 const STORAGE_KEY = "ens-tuner-state-v1";
 
@@ -13,7 +14,7 @@ let lastNoteSeconds = 0.1;
 let lastEvents = 0;
 let charSpans = [];
 let stopTimer = null;
-let vizRafId = 0;
+let cancelVizFn = () => {};
 
 function loadState() {
   try {
@@ -53,60 +54,18 @@ function regenerate(force = false) {
 }
 
 function renderCharViz(name) {
-  const viz = $("char-viz");
-  viz.innerHTML = "";
-  charSpans = [];
-  if (!name) return;
-  const enc = new TextEncoder();
-  let offset = 0;
-  for (const ch of name) {
-    const len = enc.encode(ch).length;
-    const span = document.createElement("span");
-    span.className = "char";
-    span.textContent = ch === " " ? "·" : ch;
-    charSpans.push({ el: span, start: offset * 2, end: (offset + len) * 2 });
-    viz.appendChild(span);
-    offset += len;
-  }
-}
-
-function setActiveChar(byteIdx) {
-  for (const c of charSpans) {
-    const active = byteIdx >= c.start && byteIdx < c.end;
-    c.el.classList.toggle("active", active);
-  }
-}
-
-function clearActiveChar() {
-  for (const c of charSpans) c.el.classList.remove("active");
+  charSpans = mountCharViz($("char-viz"), name);
 }
 
 function startViz() {
-  cancelViz();
-  if (!charSpans.length || lastEvents <= 0) return;
-  const start = performance.now();
-  const noteMs = lastNoteSeconds * 1000;
-  const totalEvents = lastEvents;
-  const step = (now) => {
-    const elapsed = now - start;
-    const idx = Math.floor(elapsed / noteMs);
-    if (idx >= totalEvents) {
-      clearActiveChar();
-      vizRafId = 0;
-      return;
-    }
-    setActiveChar(idx);
-    vizRafId = requestAnimationFrame(step);
-  };
-  vizRafId = requestAnimationFrame(step);
+  cancelVizFn();
+  cancelVizFn = animateCharViz(charSpans, lastNoteSeconds, lastEvents);
 }
 
 function cancelViz() {
-  if (vizRafId) {
-    cancelAnimationFrame(vizRafId);
-    vizRafId = 0;
-  }
-  clearActiveChar();
+  cancelVizFn();
+  cancelVizFn = () => {};
+  clearCharViz(charSpans);
 }
 
 function setStatus(msg, dirty) {
@@ -118,7 +77,7 @@ function setStatus(msg, dirty) {
 async function ensureStrudel() {
   if (strudelReady) return;
   setStatus("Loading Strudel…", false);
-  strudelMod = await import("https://esm.sh/@strudel/web");
+  strudelMod = await import("@strudel/web");
   await strudelMod.initStrudel({
     prebake: () => {},
   });

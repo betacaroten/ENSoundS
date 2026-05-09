@@ -1,6 +1,7 @@
 import { renderStrudel } from "../../lib/generator.js";
 import { normalize } from "../../lib/mapping.js";
 import { defaults } from "../../lib/defaults.js";
+import { mountCharViz, animateCharViz, clearCharViz } from "../../lib/charviz.js";
 
 let strudelReady = false;
 let strudelMod = null;
@@ -9,7 +10,7 @@ let lastEvents = 0;
 let lastNoteSeconds = 0.1;
 let lastDuration = 0;
 let stopTimer = null;
-let vizRafId = 0;
+let cancelVizFn = () => {};
 let currentName = "";
 
 function $(id) { return document.getElementById(id); }
@@ -38,83 +39,15 @@ function setStatus(msg, kind = "") {
   if (kind) el.classList.add(kind);
 }
 
-function renderCharViz(displayName, normalizedBytesLen) {
-  const viz = $("char-viz");
-  viz.innerHTML = "";
-  charSpans = [];
-  if (!displayName) return;
-
-  const enc = new TextEncoder();
-  const normalized = normalize(displayName);
-  const isPrefix = displayName.startsWith(normalized) && displayName !== normalized;
-
-  let offset = 0;
-  let normOffset = 0;
-  for (const ch of displayName) {
-    const len = enc.encode(ch).length;
-    const span = document.createElement("span");
-    span.className = "char";
-    span.textContent = ch === " " ? "·" : ch;
-
-    let start = -1;
-    let end = -1;
-    if (isPrefix) {
-      if (normOffset < normalizedBytesLen) {
-        start = normOffset;
-        end = Math.min(normOffset + len, normalizedBytesLen);
-        if (end <= start) start = -1;
-        normOffset += len;
-      } else {
-        span.classList.add("dim");
-      }
-    } else {
-      start = offset;
-      end = offset + len;
-    }
-
-    charSpans.push({ el: span, start, end });
-    viz.appendChild(span);
-    offset += len;
-  }
-}
-
-function setActiveChar(byteIdx) {
-  for (const c of charSpans) {
-    const active = c.start >= 0 && byteIdx >= c.start && byteIdx < c.end;
-    c.el.classList.toggle("active", active);
-  }
-}
-
-function clearActiveChar() {
-  for (const c of charSpans) c.el.classList.remove("active");
-}
-
 function startViz() {
-  cancelViz();
-  if (!charSpans.length || lastEvents <= 0) return;
-  const start = performance.now();
-  const noteMs = lastNoteSeconds * 1000;
-  const total = lastEvents;
-  const step = (now) => {
-    const elapsed = now - start;
-    const idx = Math.floor(elapsed / noteMs);
-    if (idx >= total) {
-      clearActiveChar();
-      vizRafId = 0;
-      return;
-    }
-    setActiveChar(idx);
-    vizRafId = requestAnimationFrame(step);
-  };
-  vizRafId = requestAnimationFrame(step);
+  cancelVizFn();
+  cancelVizFn = animateCharViz(charSpans, lastNoteSeconds, lastEvents);
 }
 
 function cancelViz() {
-  if (vizRafId) {
-    cancelAnimationFrame(vizRafId);
-    vizRafId = 0;
-  }
-  clearActiveChar();
+  cancelVizFn();
+  cancelVizFn = () => {};
+  clearCharViz(charSpans);
 }
 
 function clearStopTimer() {
@@ -157,7 +90,7 @@ function renderProfile(name) {
   lastNoteSeconds = result.noteSeconds;
   lastDuration = result.durationSeconds;
 
-  renderCharViz(name, bytes.length);
+  charSpans = mountCharViz($("char-viz"), name, { dimBeyondNormalized: true });
   $("tune-link").href = "../tuner/?name=" + encodeURIComponent(name);
   setStatus("Tap Play to hear it.");
 }
@@ -174,7 +107,7 @@ function inferCpm(code) {
 async function ensureStrudel() {
   if (strudelReady) return;
   setStatus("Loading Strudel…");
-  strudelMod = await import("https://esm.sh/@strudel/web");
+  strudelMod = await import("@strudel/web");
   await strudelMod.initStrudel({ prebake: () => {} });
   strudelReady = true;
 }

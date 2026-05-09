@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ENS Sounds</title>
+  <style>
+    :root {
+      --bg: #0e1015;
+      --panel: #161a22;
+      --panel-2: #1f2530;
+      --fg: #e6e8ee;
+      --muted: #8b93a4;
+      --accent: #7cd1ff;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      background:
+        radial-gradient(1200px 600px at 50% -200px, rgba(124,209,255,0.10), transparent 70%),
+        var(--bg);
+      color: var(--fg);
+      font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 64px 24px 80px;
+    }
+    h1 {
+      font-size: 44px;
+      letter-spacing: -1px;
+      margin: 0 0 8px;
+    }
+    .sub { color: var(--muted); margin: 0 0 32px; font-size: 16px; }
+    .pages {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    a.card {
+      display: block;
+      background: var(--panel);
+      border: 1px solid #232a36;
+      border-radius: 12px;
+      padding: 18px 22px;
+      color: var(--fg);
+      text-decoration: none;
+      transition: border-color 120ms ease, transform 120ms ease;
+    }
+    a.card:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    a.card .name {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      color: var(--accent);
+      font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+    }
+    a.card .desc {
+      color: var(--muted);
+      margin-top: 4px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>ENS Sounds</h1>
+    <p class="sub">Every ENS name has a melody.</p>
+
+    <div class="pages">
+      <a class="card" href="profile/">
+        <div class="name">profile/</div>
+        <div class="desc">Per-name page. Type or share <code>profile/#vitalik.eth</code> and hear it.</div>
+      </a>
+      <a class="card" href="chain/">
+        <div class="name">chain/</div>
+        <div class="desc">Live mainnet stream. Reverse-resolves every <code>from</code> in each new block and plays the named ones over a drone.</div>
+      </a>
+      <a class="card" href="tuner/">
+        <div class="name">tuner/</div>
+        <div class="desc">Algorithm tuning. Sliders for scale pool, ADSR, subdivision, gain. Editable Strudel output.</div>
+      </a>
+    </div>
+  </main>
+</body>
+</html>
