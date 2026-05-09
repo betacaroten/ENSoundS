@@ -9,25 +9,19 @@
 <body>
   <main>
     <h1>ENS Sound Tuner</h1>
-    <p class="sub">Type an ENS name. Twiddle the knobs. Listen for the alien telling you their name.</p>
+    <p class="sub">List of names — one per line. Click any line to make it the current one. Twiddle knobs and listen.</p>
 
     <div class="row name-row">
-      <input id="name" type="text" placeholder="lumir" autocomplete="off" autocapitalize="off" />
-      <button id="play" class="primary">▶ Play</button>
-      <button id="stop">■ Stop</button>
+      <textarea id="names" rows="7" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+      <div class="name-row-buttons">
+        <button id="play" class="primary">▶ Play</button>
+        <button id="stop">■ Stop</button>
+        <button id="play-all">▶ Play all</button>
+      </div>
     </div>
 
     <div id="char-viz" class="char-viz" aria-hidden="true"></div>
-
-    <div id="examples" class="examples">
-      <span class="pill" data-name="lumir">lumir</span>
-      <span class="pill" data-name="betacaroten">betacaroten</span>
-      <span class="pill" data-name="vitalik">vitalik</span>
-      <span class="pill" data-name="aata">aata</span>
-      <span class="pill" data-name="mrq">mrq</span>
-      <span class="pill" data-name="abi">abi</span>
-      <span class="pill" data-name="alžběta">alžběta</span>
-    </div>
+    <canvas id="test-canvas" class="scope" width="1200" height="140" aria-hidden="true"></canvas>
 
     <div class="panels">
 

@@ -1,7 +1,7 @@
 import { renderStrudel } from "../../lib/generator.js";
 import { SCALE_POOL, SYNTHS } from "../../lib/mapping.js";
 import { defaults } from "../../lib/defaults.js";
-import { mountCharViz, animateCharViz, clearCharViz } from "../../lib/charviz.js";
+import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs, fitCanvasToCSS } from "../../lib/charviz.js";
 
 const STORAGE_KEY = "ens-tuner-state-v1";
 
@@ -9,6 +9,7 @@ let state = loadState();
 let userEdited = false;
 let strudelReady = false;
 let strudelMod = null;
+let strudelRepl = null;
 let lastDuration = 0;
 let lastNoteSeconds = 0.1;
 let lastEvents = 0;
@@ -35,13 +36,38 @@ function clone(o) { return JSON.parse(JSON.stringify(o)); }
 
 function $(id) { return document.getElementById(id); }
 
+const DEFAULT_NAMES = [
+  "vitalik.eth",
+  "lumir.eth",
+  "betacaroten.eth",
+  "mrq.eth",
+  "abi.eth",
+  "aata.eth",
+  "alžběta.eth",
+];
+
+function getNamesList() {
+  return $("names").value.split("\n").map((s) => s.trim()).filter(Boolean);
+}
+
+function getCurrentName() {
+  const ta = $("names");
+  const before = ta.value.slice(0, ta.selectionStart ?? 0);
+  const lineIdx = before.split("\n").length - 1;
+  const lines = ta.value.split("\n");
+  const cursorLine = (lines[lineIdx] ?? "").trim();
+  if (cursorLine) return cursorLine;
+  const first = getNamesList()[0];
+  return first || "";
+}
+
 function regenerate(force = false) {
   if (userEdited && !force) {
     setStatus("Code is manually edited — slider changes won't auto-update. Click Reset to regenerate.", true);
     return;
   }
-  const name = $("name").value;
-  const { code, durationSeconds, noteSeconds, events } = renderStrudel(name, state);
+  const name = getCurrentName();
+  const { code, durationSeconds, noteSeconds, events } = renderStrudel(name, { ...state, scope: true });
   $("code").value = code;
   lastDuration = durationSeconds;
   lastNoteSeconds = noteSeconds;
@@ -49,7 +75,7 @@ function regenerate(force = false) {
   renderCharViz(name);
   userEdited = false;
   setStatus(
-    name ? `Generated for "${name}" (one pass: ${durationSeconds.toFixed(1)}s)` : "Type a name above",
+    name ? `Generated for "${name}" (one pass: ${durationSeconds.toFixed(1)}s)` : "Add a name above",
     false
   );
   liveReeval(code);
@@ -87,7 +113,7 @@ async function ensureStrudel() {
   if (strudelReady) return;
   setStatus("Loading Strudel…", false);
   strudelMod = await import("@strudel/web");
-  await strudelMod.initStrudel({
+  strudelRepl = await strudelMod.initStrudel({
     prebake: () => {},
   });
   strudelReady = true;
@@ -103,7 +129,8 @@ async function onPlay() {
     if (!evalFn) throw new Error("Strudel evaluate() not available");
     await evalFn(code);
     isPlaying = true;
-    startViz();
+    const delayMs = nextCycleDelayMs(strudelRepl);
+    setTimeout(startViz, delayMs);
     if (state.loopEnabled) {
       setStatus("Looping… click Stop to end.", false);
     } else if (lastDuration > 0) {
@@ -115,7 +142,7 @@ async function onPlay() {
         isPlaying = false;
         setStatus("Done.", false);
         stopTimer = null;
-      }, lastDuration * 1000);
+      }, delayMs + lastDuration * 1000);
     } else {
       setStatus("Playing.", false);
     }
@@ -257,20 +284,56 @@ function bindAdsr(prefix, key) {
   }
 }
 
-function bindExamples() {
-  $("examples").addEventListener("click", (e) => {
-    const t = e.target;
-    if (t.classList.contains("pill")) {
-      $("name").value = t.dataset.name;
-      regenerate(true);
-    }
-  });
+let playAllAbort = null;
+
+async function onPlayAll() {
+  const names = getNamesList();
+  if (!names.length) return;
+  if (playAllAbort) playAllAbort.aborted = true;
+  const aborter = { aborted: false };
+  playAllAbort = aborter;
+  setStatus(`Play all: ${names.length} names…`, false);
+  for (let i = 0; i < names.length; i++) {
+    if (aborter.aborted) return;
+    const name = names[i];
+    setSelectedLine(i);
+    regenerate(true);
+    await onPlay();
+    const ms = (lastDuration > 0 ? lastDuration * 1000 : 1500) + 250;
+    await new Promise((r) => setTimeout(r, ms));
+  }
+  if (!aborter.aborted) setStatus("Play all: done.", false);
+  if (playAllAbort === aborter) playAllAbort = null;
+}
+
+function setSelectedLine(idx) {
+  const ta = $("names");
+  const lines = ta.value.split("\n");
+  let pos = 0;
+  for (let i = 0; i < idx && i < lines.length; i++) pos += lines[i].length + 1;
+  ta.focus();
+  ta.setSelectionRange(pos, pos + (lines[idx]?.length ?? 0));
 }
 
 function init() {
-  $("name").addEventListener("input", () => regenerate());
+  fitCanvasToCSS($("test-canvas"));
+
+  const namesTa = $("names");
+  if (!namesTa.value.trim()) {
+    namesTa.value = DEFAULT_NAMES.join("\n");
+  }
+  const onCursorMove = () => regenerate();
+  namesTa.addEventListener("input", onCursorMove);
+  namesTa.addEventListener("keyup", onCursorMove);
+  namesTa.addEventListener("click", onCursorMove);
+  namesTa.addEventListener("focus", onCursorMove);
+
   $("play").addEventListener("click", onPlay);
-  $("stop").addEventListener("click", onStop);
+  $("stop").addEventListener("click", () => {
+    if (playAllAbort) playAllAbort.aborted = true;
+    onStop();
+  });
+  $("play-all").addEventListener("click", onPlayAll);
   $("reset").addEventListener("click", () => regenerate(true));
   $("export-defaults").addEventListener("click", onExportDefaults);
 
@@ -316,11 +379,15 @@ function init() {
   bindIntRange("drone-lpf", "droneLpf");
   bindIntRange("drone-hpf", "droneHpf");
 
-  bindExamples();
-
   const params = new URLSearchParams(location.search);
   const handoff = params.get("name");
-  if (handoff) $("name").value = handoff;
+  if (handoff) {
+    const existing = namesTa.value.split("\n").map((s) => s.trim());
+    if (!existing.includes(handoff)) {
+      namesTa.value = handoff + "\n" + namesTa.value;
+    }
+    setSelectedLine(0);
+  }
 
   regenerate(true);
 }

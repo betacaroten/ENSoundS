@@ -1,6 +1,6 @@
 import { renderStrudel } from "../../lib/generator.js";
 import { defaults } from "../../lib/defaults.js";
-import { mountCharViz, animateCharViz, clearCharViz } from "../../lib/charviz.js";
+import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs, fitCanvasToCSS } from "../../lib/charviz.js";
 import {
   DEFAULT_RPC,
   makeClient,
@@ -29,6 +29,7 @@ let pollTimer = null;
 let pollDelay = POLL_BASE_MS;
 let strudelReady = false;
 let strudelMod = null;
+let strudelRepl = null;
 
 let current = null;
 let currentTimer = null;
@@ -39,7 +40,7 @@ let cancelVizFn = () => {};
 
 const recent = [];
 
-const IDLE_DRONE = `setcpm(60)\n\t$: n("<-12>").scale("c:minor").s("sine").gain(.4)`;
+const IDLE_DRONE = `setcpm(60)\n\t$: n("<-12>").scale("c:minor").s("sine").gain(.4).tscope({ id: 1, color: "#7cd1ff", thickness: 2, scale: 1.6, pos: .5 })`;
 
 function $(id) { return document.getElementById(id); }
 
@@ -92,7 +93,7 @@ async function ensureStrudel() {
   if (strudelReady) return;
   setStatus("Loading audio engine…");
   strudelMod = await import("@strudel/web");
-  await strudelMod.initStrudel({ prebake: () => {} });
+  strudelRepl = await strudelMod.initStrudel({ prebake: () => {} });
   strudelReady = true;
 }
 
@@ -113,19 +114,21 @@ async function evaluateIdle() {
 
 async function playName(entry) {
   current = entry;
-  const r = renderStrudel(entry.name, defaults);
+  const r = renderStrudel(entry.name, { ...defaults, scope: true });
   $("now-playing").textContent = entry.name;
   $("now-playing-row").classList.add("on");
   renderCharViz(entry.name);
+  let delayMs = 0;
   try {
     await evalStrudel(r.code);
-    startViz(r.noteSeconds, r.events);
+    delayMs = nextCycleDelayMs(strudelRepl);
+    setTimeout(() => startViz(r.noteSeconds, r.events), delayMs);
   } catch (e) {
     console.error(e);
     setStatus("Audio error: " + (e.message || e), "error");
   }
   if (currentTimer) clearTimeout(currentTimer);
-  const ms = Math.max(500, r.durationSeconds * 1000);
+  const ms = Math.max(500, delayMs + r.durationSeconds * 1000);
   currentTimer = setTimeout(() => {
     currentTimer = null;
     current = null;
@@ -192,7 +195,6 @@ async function pollOnce() {
   try {
     const n = await getLatestBlockNumber(client);
     if (n === lastBlockNumber) return;
-    if (lastBlockNumber === 0n) { lastBlockNumber = n; setBlock(n); return; }
     lastBlockNumber = n;
     setBlock(n);
     setLive(true);
@@ -285,6 +287,7 @@ function bindSettings() {
 }
 
 function init() {
+  fitCanvasToCSS($("test-canvas"));
   $("start").addEventListener("click", start);
   $("stop").addEventListener("click", stop);
   bindSettings();

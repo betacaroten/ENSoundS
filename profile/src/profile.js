@@ -1,10 +1,11 @@
 import { renderStrudel } from "../../lib/generator.js";
 import { normalize } from "../../lib/mapping.js";
 import { defaults } from "../../lib/defaults.js";
-import { mountCharViz, animateCharViz, clearCharViz } from "../../lib/charviz.js";
+import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs, fitCanvasToCSS } from "../../lib/charviz.js";
 
 let strudelReady = false;
 let strudelMod = null;
+let strudelRepl = null;
 let charSpans = [];
 let lastEvents = 0;
 let lastNoteSeconds = 0.1;
@@ -108,7 +109,7 @@ async function ensureStrudel() {
   if (strudelReady) return;
   setStatus("Loading Strudel…");
   strudelMod = await import("@strudel/web");
-  await strudelMod.initStrudel({ prebake: () => {} });
+  strudelRepl = await strudelMod.initStrudel({ prebake: () => {} });
   strudelReady = true;
 }
 
@@ -119,9 +120,10 @@ async function onPlay() {
     clearStopTimer();
     const evalFn = strudelMod.evaluate || window.evaluate;
     if (!evalFn) throw new Error("Strudel evaluate() not available");
-    const { code } = renderStrudel(currentName, defaults);
+    const { code } = renderStrudel(currentName, { ...defaults, scope: true });
     await evalFn(code);
-    startViz();
+    const delayMs = nextCycleDelayMs(strudelRepl);
+    setTimeout(startViz, delayMs);
     if (lastDuration > 0) {
       setStatus(`Playing… auto-stop in ${lastDuration.toFixed(1)}s`);
       stopTimer = setTimeout(() => {
@@ -130,7 +132,7 @@ async function onPlay() {
         cancelViz();
         setStatus("Done.");
         stopTimer = null;
-      }, Math.max(0, lastDuration * 1000 - 100));
+      }, Math.max(0, delayMs + lastDuration * 1000 - 100));
     } else {
       setStatus("Playing.");
     }
@@ -198,6 +200,7 @@ function route() {
 }
 
 function init() {
+  fitCanvasToCSS($("test-canvas"));
   $("play").addEventListener("click", onPlay);
   $("stop").addEventListener("click", onStop);
   $("copy").addEventListener("click", onCopy);
