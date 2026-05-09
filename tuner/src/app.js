@@ -282,14 +282,21 @@ function init() {
   bindSelect("lead-synth", "leadSynth", SYNTHS);
   bindAdsr("lead", "leadAdsr");
   bindRange("lead-gain", "leadGain");
+  bindIntRange("lead-lpf", "leadLpf");
+  bindIntRange("lead-hpf", "leadHpf");
 
   bindCheckbox("pad-enabled", "padEnabled");
   bindSelect("pad-synth", "padSynth", SYNTHS);
   bindAdsr("pad", "padAdsr");
   bindRange("pad-gain", "padGain");
+  bindIntRange("pad-lpf", "padLpf");
+  bindIntRange("pad-hpf", "padHpf");
 
   bindCheckbox("drone-enabled", "droneEnabled");
   bindRange("drone-gain", "droneGain");
+  bindIntRange("drone-semitones", "droneSemitones");
+  bindIntRange("drone-lpf", "droneLpf");
+  bindIntRange("drone-hpf", "droneHpf");
 
   bindExamples();
 
