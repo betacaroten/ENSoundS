@@ -1,6 +1,6 @@
 import { renderStrudel } from "../../lib/generator.js";
 import { defaults } from "../../lib/defaults.js";
-import { mountCharViz, animateCharViz, clearCharViz } from "../../lib/charviz.js";
+import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs } from "../../lib/charviz.js";
 import {
   DEFAULT_RPC,
   makeClient,
@@ -29,6 +29,7 @@ let pollTimer = null;
 let pollDelay = POLL_BASE_MS;
 let strudelReady = false;
 let strudelMod = null;
+let strudelRepl = null;
 
 let current = null;
 let currentTimer = null;
@@ -92,7 +93,7 @@ async function ensureStrudel() {
   if (strudelReady) return;
   setStatus("Loading audio engine…");
   strudelMod = await import("@strudel/web");
-  await strudelMod.initStrudel({ prebake: () => {} });
+  strudelRepl = await strudelMod.initStrudel({ prebake: () => {} });
   strudelReady = true;
 }
 
@@ -117,15 +118,17 @@ async function playName(entry) {
   $("now-playing").textContent = entry.name;
   $("now-playing-row").classList.add("on");
   renderCharViz(entry.name);
+  let delayMs = 0;
   try {
     await evalStrudel(r.code);
-    startViz(r.noteSeconds, r.events);
+    delayMs = nextCycleDelayMs(strudelRepl);
+    setTimeout(() => startViz(r.noteSeconds, r.events), delayMs);
   } catch (e) {
     console.error(e);
     setStatus("Audio error: " + (e.message || e), "error");
   }
   if (currentTimer) clearTimeout(currentTimer);
-  const ms = Math.max(500, r.durationSeconds * 1000);
+  const ms = Math.max(500, delayMs + r.durationSeconds * 1000);
   currentTimer = setTimeout(() => {
     currentTimer = null;
     current = null;

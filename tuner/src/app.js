@@ -1,7 +1,7 @@
 import { renderStrudel } from "../../lib/generator.js";
 import { SCALE_POOL, SYNTHS } from "../../lib/mapping.js";
 import { defaults } from "../../lib/defaults.js";
-import { mountCharViz, animateCharViz, clearCharViz } from "../../lib/charviz.js";
+import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs } from "../../lib/charviz.js";
 
 const STORAGE_KEY = "ens-tuner-state-v1";
 
@@ -9,6 +9,7 @@ let state = loadState();
 let userEdited = false;
 let strudelReady = false;
 let strudelMod = null;
+let strudelRepl = null;
 let lastDuration = 0;
 let lastNoteSeconds = 0.1;
 let lastEvents = 0;
@@ -78,7 +79,7 @@ async function ensureStrudel() {
   if (strudelReady) return;
   setStatus("Loading Strudel…", false);
   strudelMod = await import("@strudel/web");
-  await strudelMod.initStrudel({
+  strudelRepl = await strudelMod.initStrudel({
     prebake: () => {},
   });
   strudelReady = true;
@@ -93,7 +94,8 @@ async function onPlay() {
     const evalFn = strudelMod.evaluate || window.evaluate;
     if (!evalFn) throw new Error("Strudel evaluate() not available");
     await evalFn(code);
-    startViz();
+    const delayMs = nextCycleDelayMs(strudelRepl);
+    setTimeout(startViz, delayMs);
     if (lastDuration > 0) {
       setStatus(`Playing… auto-stop in ${lastDuration.toFixed(1)}s`, false);
       stopTimer = setTimeout(() => {
@@ -102,7 +104,7 @@ async function onPlay() {
         cancelViz();
         setStatus("Done.", false);
         stopTimer = null;
-      }, lastDuration * 1000);
+      }, delayMs + lastDuration * 1000);
     } else {
       setStatus("Playing.", false);
     }
