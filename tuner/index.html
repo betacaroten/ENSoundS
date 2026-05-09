@@ -224,6 +224,61 @@
         </div>
       </section>
 
+      <section class="panel">
+        <h2>Aux</h2>
+        <div class="field toggle">
+          <label for="aux-enabled">Enabled</label>
+          <input id="aux-enabled" type="checkbox" />
+        </div>
+        <div class="field">
+          <label for="aux-synth">Synth</label>
+          <select id="aux-synth"></select>
+          <span class="val"></span>
+        </div>
+        <div class="adsr-grid">
+          <div class="cell">
+            <label>A</label>
+            <input id="aux-a" type="range" min="0" max="2" step="0.01" />
+            <span class="val" id="aux-a-val"></span>
+          </div>
+          <div class="cell">
+            <label>D</label>
+            <input id="aux-d" type="range" min="0" max="2" step="0.01" />
+            <span class="val" id="aux-d-val"></span>
+          </div>
+          <div class="cell">
+            <label>S</label>
+            <input id="aux-s" type="range" min="0" max="5" step="0.01" />
+            <span class="val" id="aux-s-val"></span>
+          </div>
+          <div class="cell">
+            <label>R</label>
+            <input id="aux-r" type="range" min="0" max="3" step="0.01" />
+            <span class="val" id="aux-r-val"></span>
+          </div>
+        </div>
+        <div class="field" style="margin-top:10px">
+          <label for="aux-gain">Gain</label>
+          <input id="aux-gain" type="range" min="0" max="1" step="0.01" />
+          <span class="val" id="aux-gain-val"></span>
+        </div>
+        <div class="field">
+          <label for="aux-semitones">Tone (semitones)</label>
+          <input id="aux-semitones" type="range" min="-36" max="36" step="1" />
+          <span class="val" id="aux-semitones-val"></span>
+        </div>
+        <div class="field">
+          <label for="aux-lpf">LPF (Hz)</label>
+          <input id="aux-lpf" type="range" min="100" max="20000" step="50" />
+          <span class="val" id="aux-lpf-val"></span>
+        </div>
+        <div class="field">
+          <label for="aux-hpf">HPF (Hz)</label>
+          <input id="aux-hpf" type="range" min="0" max="2000" step="10" />
+          <span class="val" id="aux-hpf-val"></span>
+        </div>
+      </section>
+
     </div>
 
     <section class="panel code-panel">

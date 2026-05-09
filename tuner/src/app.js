@@ -380,6 +380,14 @@ function init() {
   bindIntRange("drone-lpf", "droneLpf");
   bindIntRange("drone-hpf", "droneHpf");
 
+  bindCheckbox("aux-enabled", "auxEnabled");
+  bindSelect("aux-synth", "auxSynth", SYNTHS);
+  bindAdsr("aux", "auxAdsr");
+  bindRange("aux-gain", "auxGain");
+  bindIntRange("aux-semitones", "auxSemitones");
+  bindIntRange("aux-lpf", "auxLpf");
+  bindIntRange("aux-hpf", "auxHpf");
+
   const params = new URLSearchParams(location.search);
   const handoff = params.get("name");
   if (handoff) {
