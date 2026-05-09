@@ -117,27 +117,30 @@ function ensNameFor(input) {
   return n ? `${n}.eth` : "";
 }
 
+function shortAddr(addr) {
+  return addr.slice(0, 6) + "…" + addr.slice(-4);
+}
+
 async function checkEnsRegistration(input) {
   const banner = $("register-banner");
   const link = $("register-link");
   const text = $("register-text");
   banner.classList.add("hidden");
+  banner.classList.remove("registered", "unregistered");
 
   const ensName = ensNameFor(input);
   if (!ensName) return;
 
   const seq = ++ensCheckSeq;
-  link.href = `https://app.ens.domains/${encodeURIComponent(ensName)}`;
   text.textContent = `Checking ${ensName}…`;
 
-  let registered;
+  let address;
   if (ensCheckCache.has(ensName)) {
-    registered = ensCheckCache.get(ensName);
+    address = ensCheckCache.get(ensName);
   } else {
     try {
-      const addr = await ensClient.getEnsAddress({ name: ensName });
-      registered = addr != null;
-      ensCheckCache.set(ensName, registered);
+      address = await ensClient.getEnsAddress({ name: ensName });
+      ensCheckCache.set(ensName, address);
     } catch (e) {
       console.warn("ENS check failed:", e);
       return;
@@ -145,12 +148,17 @@ async function checkEnsRegistration(input) {
   }
   if (seq !== ensCheckSeq) return;
 
-  if (registered) {
-    banner.classList.add("hidden");
+  if (address) {
+    text.innerHTML = `Owned by <code>${shortAddr(address)}</code>`;
+    link.textContent = `View on Etherscan →`;
+    link.href = `https://etherscan.io/address/${address}`;
+    banner.classList.add("registered");
+    banner.classList.remove("hidden");
   } else {
     text.textContent = `${ensName} isn't registered yet.`;
     link.textContent = `Register on ENS →`;
     link.href = `https://app.ens.domains/${encodeURIComponent(ensName)}`;
+    banner.classList.add("unregistered");
     banner.classList.remove("hidden");
   }
 }

@@ -129,7 +129,6 @@ button.big { padding: 14px 22px; font-size: 16px; }
   padding: 14px 18px;
   border: 1px solid #2a3140;
   border-radius: 10px;
-  background: linear-gradient(90deg, rgba(255,184,107,0.08), rgba(255,184,107,0.02));
   display: flex;
   gap: 16px;
   align-items: center;
@@ -137,13 +136,31 @@ button.big { padding: 14px 22px; font-size: 16px; }
 }
 .register-banner.hidden { display: none; }
 .register-banner span { color: var(--muted); }
+.register-banner code {
+  background: var(--panel-2);
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: var(--fg);
+  font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+  font-size: 12px;
+}
 .register-banner a {
-  color: var(--accent-2);
   text-decoration: none;
   font-weight: 600;
-  border-bottom: 1px dashed var(--accent-2);
+  border-bottom: 1px dashed currentColor;
 }
-.register-banner a:hover { color: #fff; border-bottom-color: #fff; }
+
+.register-banner.unregistered {
+  background: linear-gradient(90deg, rgba(255,184,107,0.08), rgba(255,184,107,0.02));
+}
+.register-banner.unregistered a { color: var(--accent-2); }
+.register-banner.unregistered a:hover { color: #fff; }
+
+.register-banner.registered {
+  background: linear-gradient(90deg, rgba(124,209,255,0.08), rgba(124,209,255,0.02));
+}
+.register-banner.registered a { color: var(--accent); }
+.register-banner.registered a:hover { color: #fff; }
 
 .examples {
   margin-top: 20px;
