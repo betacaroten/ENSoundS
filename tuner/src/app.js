@@ -83,7 +83,7 @@ function renderCharViz(name) {
     const span = document.createElement("span");
     span.className = "char";
     span.textContent = ch === " " ? "·" : ch;
-    charSpans.push({ el: span, start: offset, end: offset + len });
+    charSpans.push({ el: span, start: offset * 2, end: (offset + len) * 2 });
     viz.appendChild(span);
     offset += len;
   }
@@ -162,7 +162,7 @@ async function onPlay() {
         cancelViz();
         setStatus("Done.", false);
         stopTimer = null;
-      }, Math.max(0, lastDuration * 1000 - 100));
+      }, lastDuration * 1000);
     } else {
       setStatus("Playing.", false);
     }

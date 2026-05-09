@@ -24,30 +24,46 @@ export function deriveParams(name, options) {
     ? options.lockedCpm
     : options.cpmBase + (s1 % options.cpmRange);
 
-  const melody = bytesToMelody(bytes, options.subdivisionDensity, seed);
+  const nibbles = bytesToNibbles(bytes);
+  const melody = nibblesToMelody(nibbles, options.subdivisionDensity, seed);
 
-  return { scale, cpm, melody, bytes, seed, events: bytes.length || 1 };
+  return { scale, cpm, melody, bytes, seed, events: nibbles.length || 1 };
 }
 
-function noteFromByte(byte) {
-  return (byte % 13) - 6;
-}
-
-function bytesToMelody(bytes, density, seed) {
-  if (bytes.length === 0) return "0";
-  const threshold = Math.floor(density * 256);
-  const events = [];
+function bytesToNibbles(bytes) {
+  const out = new Array(bytes.length * 2);
   for (let i = 0; i < bytes.length; i++) {
-    const b = bytes[i];
-    const note = noteFromByte(b);
-    const triggerByte = b ^ ((seed >>> ((i & 3) * 8)) & 0xff);
-    if (triggerByte >= 256 - threshold && bytes.length > 1) {
-      const sibling = bytes[(i + 1) % bytes.length];
-      const note2 = noteFromByte(sibling);
-      events.push(`[${note} ${note2}]`);
-    } else {
-      events.push(String(note));
+    out[i * 2] = (bytes[i] >> 4) & 0xf;
+    out[i * 2 + 1] = bytes[i] & 0xf;
+  }
+  return out;
+}
+
+function noteFromNibble(n) {
+  return n - 8;
+}
+
+const TAIL_RESTS = 4;
+
+function nibblesToMelody(nibbles, density, seed) {
+  const events = [];
+  if (nibbles.length === 0) {
+    events.push("0");
+  } else {
+    const threshold = Math.floor(density * 16);
+    for (let i = 0; i < nibbles.length; i++) {
+      const n = nibbles[i];
+      const note = noteFromNibble(n);
+      const trigger = n ^ ((seed >>> ((i & 7) * 4)) & 0xf);
+      if (trigger >= 16 - threshold && nibbles.length > 1) {
+        const sibling = nibbles[(i + 1) % nibbles.length];
+        const note2 = noteFromNibble(sibling);
+        events.push(`[${note} ${note2}]`);
+      } else {
+        events.push(String(note));
+      }
     }
   }
+  for (let i = 0; i < TAIL_RESTS; i++) events.push("~");
   return events.join(" ");
 }
