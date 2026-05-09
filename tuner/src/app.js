@@ -153,6 +153,19 @@ async function onPlay() {
   }
 }
 
+async function onExportDefaults() {
+  const json = JSON.stringify(state, null, 2);
+  const objLiteral = json.replace(/^(\s+)"([A-Za-z_][\w]*)":/gm, "$1$2:");
+  const text = `export const defaults = ${objLiteral};\n`;
+  try {
+    await navigator.clipboard.writeText(text);
+    setStatus("Current settings copied as `defaults` — paste into lib/defaults.js.", false);
+  } catch {
+    console.log(text);
+    setStatus("Clipboard blocked — see console for the defaults block.", true);
+  }
+}
+
 function onStop() {
   clearStopTimer();
   cancelViz();
@@ -266,6 +279,7 @@ function init() {
   $("play").addEventListener("click", onPlay);
   $("stop").addEventListener("click", onStop);
   $("reset").addEventListener("click", () => regenerate(true));
+  $("export-defaults").addEventListener("click", onExportDefaults);
 
   $("code").addEventListener("input", () => {
     userEdited = true;
