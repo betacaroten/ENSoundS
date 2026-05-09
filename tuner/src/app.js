@@ -66,7 +66,7 @@ function regenerate(force = false) {
     return;
   }
   const name = getCurrentName();
-  const { code, durationSeconds, noteSeconds, events } = renderStrudel(name, state);
+  const { code, durationSeconds, noteSeconds, events } = renderStrudel(name, { ...state, scope: true });
   $("code").value = code;
   lastDuration = durationSeconds;
   lastNoteSeconds = noteSeconds;

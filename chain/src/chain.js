@@ -40,7 +40,7 @@ let cancelVizFn = () => {};
 
 const recent = [];
 
-const IDLE_DRONE = `setcpm(60)\n\t$: n("<-12>").scale("c:minor").s("sine").gain(.4)`;
+const IDLE_DRONE = `setcpm(60)\n\t$: n("<-12>").scale("c:minor").s("sine").gain(.4).tscope({ id: 1, color: "#7cd1ff", thickness: 2, scale: .35, pos: .5 })`;
 
 function $(id) { return document.getElementById(id); }
 
@@ -114,7 +114,7 @@ async function evaluateIdle() {
 
 async function playName(entry) {
   current = entry;
-  const r = renderStrudel(entry.name, defaults);
+  const r = renderStrudel(entry.name, { ...defaults, scope: true });
   $("now-playing").textContent = entry.name;
   $("now-playing-row").classList.add("on");
   renderCharViz(entry.name);

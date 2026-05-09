@@ -120,7 +120,7 @@ async function onPlay() {
     clearStopTimer();
     const evalFn = strudelMod.evaluate || window.evaluate;
     if (!evalFn) throw new Error("Strudel evaluate() not available");
-    const { code } = renderStrudel(currentName, defaults);
+    const { code } = renderStrudel(currentName, { ...defaults, scope: true });
     await evalFn(code);
     const delayMs = nextCycleDelayMs(strudelRepl);
     setTimeout(startViz, delayMs);
