@@ -1,27 +1,8 @@
-import { renderStrudel } from "./generator.js";
-import { SCALE_POOL, SYNTHS } from "./mapping.js";
+import { renderStrudel } from "../../lib/generator.js";
+import { SCALE_POOL, SYNTHS } from "../../lib/mapping.js";
+import { defaults } from "../../lib/defaults.js";
 
 const STORAGE_KEY = "ens-tuner-state-v1";
-
-const defaults = {
-  lockScale: false,
-  lockedScale: SCALE_POOL[0],
-  lockCpm: false,
-  lockedCpm: 120,
-  cpmBase: 90,
-  cpmRange: 60,
-  subdivisionDensity: 0.3,
-  leadEnabled: true,
-  leadSynth: "sine",
-  leadAdsr: [0.6, 0.1, 1.0, 0.6],
-  leadGain: 1.0,
-  padEnabled: true,
-  padSynth: "supersaw",
-  padAdsr: [0.1, 0.2, 3.0, 0.2],
-  padGain: 0.05,
-  droneEnabled: true,
-  droneGain: 0.6,
-};
 
 let state = loadState();
 let userEdited = false;
@@ -298,6 +279,11 @@ function init() {
   bindRange("drone-gain", "droneGain");
 
   bindExamples();
+
+  const params = new URLSearchParams(location.search);
+  const handoff = params.get("name");
+  if (handoff) $("name").value = handoff;
+
   regenerate(true);
 }
 
