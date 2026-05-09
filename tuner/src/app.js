@@ -10,7 +10,8 @@ const defaults = {
   lockedCpm: 120,
   cpmBase: 90,
   cpmRange: 60,
-  subdivisionDensity: 0.3,
+  subSizes: [2],
+  subStep: 3,
   leadEnabled: true,
   leadSynth: "sine",
   leadAdsr: [0.6, 0.1, 1.0, 0.6],
@@ -210,6 +211,23 @@ function bindIntRange(id, key) {
   el.addEventListener("input", () => { state[key] = Math.round(+el.value); });
 }
 
+function bindSizesText(id, key) {
+  const el = $(id);
+  el.value = (state[key] || []).join(" ");
+  el.addEventListener("input", () => {
+    state[key] = parseSizes(el.value);
+    saveState();
+    regenerate();
+  });
+}
+
+function parseSizes(s) {
+  return s
+    .split(/[\s,]+/)
+    .map((t) => parseInt(t, 10))
+    .filter((n) => Number.isInteger(n) && n >= 2 && n <= 8);
+}
+
 function bindCheckbox(id, key) {
   const el = $(id);
   el.checked = !!state[key];
@@ -282,7 +300,8 @@ function init() {
   bindIntRange("cpm-base", "cpmBase");
   bindIntRange("cpm-range", "cpmRange");
 
-  bindRange("subdivision", "subdivisionDensity");
+  bindSizesText("sub-sizes", "subSizes");
+  bindIntRange("sub-step", "subStep");
 
   bindCheckbox("lead-enabled", "leadEnabled");
   bindSelect("lead-synth", "leadSynth", SYNTHS);

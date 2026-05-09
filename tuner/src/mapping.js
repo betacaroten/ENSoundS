@@ -25,7 +25,10 @@ export function deriveParams(name, options) {
     : options.cpmBase + (s1 % options.cpmRange);
 
   const nibbles = bytesToNibbles(bytes);
-  const melody = nibblesToMelody(nibbles, options.subdivisionDensity, seed);
+  const melody = nibblesToMelody(nibbles, {
+    sizes: Array.isArray(options.subSizes) ? options.subSizes : [],
+    step: options.subStep | 0,
+  });
 
   return { scale, cpm, melody, bytes, seed, events: nibbles.length || 1 };
 }
@@ -45,20 +48,28 @@ function noteFromNibble(n) {
 
 const TAIL_RESTS = 4;
 
-function nibblesToMelody(nibbles, density, seed) {
+function nibblesToMelody(nibbles, sub) {
   const events = [];
   if (nibbles.length === 0) {
     events.push("0");
   } else {
-    const threshold = Math.floor(density * 16);
+    const sizes = (sub.sizes || []).filter((n) => n >= 2 && n <= 8);
+    const step = sub.step | 0;
+    let subIdx = 0;
     for (let i = 0; i < nibbles.length; i++) {
       const n = nibbles[i];
       const note = noteFromNibble(n);
-      const trigger = n ^ ((seed >>> ((i & 7) * 4)) & 0xf);
-      if (trigger >= 16 - threshold && nibbles.length > 1) {
-        const sibling = nibbles[(i + 1) % nibbles.length];
-        const note2 = noteFromNibble(sibling);
-        events.push(`[${note} ${note2}]`);
+      const shouldSub =
+        step > 0 && sizes.length > 0 && i > 0 && i % step === 0 && nibbles.length > 1;
+      if (shouldSub) {
+        const size = sizes[subIdx % sizes.length];
+        subIdx++;
+        const subNotes = [String(note)];
+        for (let k = 1; k < size; k++) {
+          const sibling = nibbles[(i + k) % nibbles.length];
+          subNotes.push(String(noteFromNibble(sibling)));
+        }
+        events.push(`[${subNotes.join(" ")}]`);
       } else {
         events.push(String(note));
       }
