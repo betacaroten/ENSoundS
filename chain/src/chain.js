@@ -1,5 +1,7 @@
 import { renderStrudel } from "../../lib/generator.js";
-import { defaults } from "../../lib/defaults.js";
+import { loadOptions } from "../../lib/state.js";
+
+const options = loadOptions();
 import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs, fitCanvasToCSS } from "../../lib/charviz.js";
 import {
   DEFAULT_RPC,
@@ -115,7 +117,7 @@ async function evaluateIdle() {
 
 async function playName(entry) {
   current = entry;
-  const r = renderStrudel(entry.name, { ...defaults, scope: true, droneEnabled: false });
+  const r = renderStrudel(entry.name, { ...options, scope: true, droneEnabled: false });
   const codeWithBg = r.code + "\n" + BG_DRONE_LINE;
   $("now-playing").textContent = entry.name;
   $("now-playing-row").classList.add("on");

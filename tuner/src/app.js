@@ -1,11 +1,9 @@
 import { renderStrudel } from "../../lib/generator.js";
 import { SYNTHS } from "../../lib/mapping.js";
-import { defaults } from "../../lib/defaults.js";
+import { loadOptions, saveOptions } from "../../lib/state.js";
 import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs, fitCanvasToCSS } from "../../lib/charviz.js";
 
-const STORAGE_KEY = "ens-tuner-state-v1";
-
-let state = loadState();
+let state = loadOptions();
 let userEdited = false;
 let strudelReady = false;
 let strudelMod = null;
@@ -18,21 +16,9 @@ let stopTimer = null;
 let cancelVizFn = () => {};
 let isPlaying = false;
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return clone(defaults);
-    return { ...clone(defaults), ...JSON.parse(raw) };
-  } catch {
-    return clone(defaults);
-  }
-}
-
 function saveState() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+  saveOptions(state);
 }
-
-function clone(o) { return JSON.parse(JSON.stringify(o)); }
 
 function $(id) { return document.getElementById(id); }
 

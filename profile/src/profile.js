@@ -1,6 +1,8 @@
 import { renderStrudel } from "../../lib/generator.js";
 import { normalize } from "../../lib/mapping.js";
-import { defaults } from "../../lib/defaults.js";
+import { loadOptions } from "../../lib/state.js";
+
+const options = loadOptions();
 import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs, fitCanvasToCSS } from "../../lib/charviz.js";
 import { createPublicClient, http, fallback } from "viem";
 import { mainnet } from "viem/chains";
@@ -93,7 +95,7 @@ function renderProfile(name) {
     noteEl.classList.add("hidden");
   }
 
-  const result = renderStrudel(name, defaults);
+  const result = renderStrudel(name, options);
   $("code").textContent = result.code;
   $("meta-scale").textContent = inferScale(result.code);
   $("meta-cpm").textContent = inferCpm(result.code);
@@ -187,7 +189,7 @@ async function onPlay() {
     clearStopTimer();
     const evalFn = strudelMod.evaluate || window.evaluate;
     if (!evalFn) throw new Error("Strudel evaluate() not available");
-    const { code } = renderStrudel(currentName, { ...defaults, scope: true });
+    const { code } = renderStrudel(currentName, { ...options, scope: true });
     await evalFn(code);
     const delayMs = nextCycleDelayMs(strudelRepl);
     setTimeout(startViz, delayMs);
