@@ -1,0 +1,211 @@
+import { renderStrudel } from "./generator.js";
+import { SCALE_POOL, SYNTHS } from "./mapping.js";
+
+const STORAGE_KEY = "ens-tuner-state-v1";
+
+const defaults = {
+  lockScale: false,
+  lockedScale: SCALE_POOL[0],
+  lockCpm: false,
+  lockedCpm: 120,
+  cpmBase: 90,
+  cpmRange: 60,
+  subdivisionDensity: 0.3,
+  leadEnabled: true,
+  leadSynth: "sine",
+  leadAdsr: [0.6, 0.1, 1.0, 0.6],
+  leadGain: 1.0,
+  padEnabled: true,
+  padSynth: "supersaw",
+  padAdsr: [0.1, 0.2, 3.0, 0.2],
+  padGain: 0.05,
+  droneEnabled: true,
+  droneGain: 0.6,
+};
+
+let state = loadState();
+let userEdited = false;
+let strudelReady = false;
+let strudelMod = null;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return clone(defaults);
+    return { ...clone(defaults), ...JSON.parse(raw) };
+  } catch {
+    return clone(defaults);
+  }
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+}
+
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+function $(id) { return document.getElementById(id); }
+
+function regenerate(force = false) {
+  if (userEdited && !force) {
+    setStatus("Code is manually edited — slider changes won't auto-update. Click Reset to regenerate.", true);
+    return;
+  }
+  const name = $("name").value;
+  $("code").value = renderStrudel(name, state);
+  userEdited = false;
+  setStatus(name ? `Generated for "${name}"` : "Type a name above", false);
+}
+
+function setStatus(msg, dirty) {
+  const el = $("status");
+  el.textContent = msg;
+  el.classList.toggle("dirty", !!dirty);
+}
+
+async function ensureStrudel() {
+  if (strudelReady) return;
+  setStatus("Loading Strudel…", false);
+  strudelMod = await import("https://esm.sh/@strudel/web");
+  await strudelMod.initStrudel({
+    prebake: () => {},
+  });
+  strudelReady = true;
+  setStatus("Strudel ready.", false);
+}
+
+async function onPlay() {
+  try {
+    await ensureStrudel();
+    const code = $("code").value;
+    const evalFn = strudelMod.evaluate || window.evaluate;
+    if (!evalFn) throw new Error("Strudel evaluate() not available");
+    await evalFn(code);
+    setStatus("Playing.", false);
+  } catch (e) {
+    console.error(e);
+    setStatus("Play failed: " + (e.message || e), true);
+  }
+}
+
+function onStop() {
+  try {
+    const hush = strudelMod?.hush || window.hush;
+    if (hush) hush();
+    setStatus("Stopped.", false);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function bindRange(id, key, format = (v) => v.toFixed(2)) {
+  const el = $(id);
+  const valEl = $(id + "-val");
+  el.value = state[key];
+  valEl.textContent = format(+el.value);
+  el.addEventListener("input", () => {
+    state[key] = +el.value;
+    valEl.textContent = format(+el.value);
+    saveState();
+    regenerate();
+  });
+}
+
+function bindIntRange(id, key) {
+  bindRange(id, key, (v) => String(Math.round(v)));
+  const el = $(id);
+  el.addEventListener("input", () => { state[key] = Math.round(+el.value); });
+}
+
+function bindCheckbox(id, key) {
+  const el = $(id);
+  el.checked = !!state[key];
+  el.addEventListener("change", () => {
+    state[key] = el.checked;
+    saveState();
+    regenerate();
+  });
+}
+
+function bindSelect(id, key, options) {
+  const el = $(id);
+  el.innerHTML = "";
+  for (const opt of options) {
+    const o = document.createElement("option");
+    o.value = opt;
+    o.textContent = opt;
+    el.appendChild(o);
+  }
+  el.value = state[key];
+  el.addEventListener("change", () => {
+    state[key] = el.value;
+    saveState();
+    regenerate();
+  });
+}
+
+function bindAdsr(prefix, key) {
+  const labels = ["a", "d", "s", "r"];
+  for (let i = 0; i < 4; i++) {
+    const slider = $(`${prefix}-${labels[i]}`);
+    const valEl = $(`${prefix}-${labels[i]}-val`);
+    slider.value = state[key][i];
+    valEl.textContent = (+slider.value).toFixed(2);
+    slider.addEventListener("input", () => {
+      state[key][i] = +slider.value;
+      valEl.textContent = (+slider.value).toFixed(2);
+      saveState();
+      regenerate();
+    });
+  }
+}
+
+function bindExamples() {
+  $("examples").addEventListener("click", (e) => {
+    const t = e.target;
+    if (t.classList.contains("pill")) {
+      $("name").value = t.dataset.name;
+      regenerate(true);
+    }
+  });
+}
+
+function init() {
+  $("name").addEventListener("input", () => regenerate());
+  $("play").addEventListener("click", onPlay);
+  $("stop").addEventListener("click", onStop);
+  $("reset").addEventListener("click", () => regenerate(true));
+
+  $("code").addEventListener("input", () => {
+    userEdited = true;
+    setStatus("Manually edited — Play uses your edits. Reset to regenerate.", true);
+  });
+
+  bindCheckbox("lock-scale", "lockScale");
+  bindSelect("locked-scale", "lockedScale", SCALE_POOL);
+
+  bindCheckbox("lock-cpm", "lockCpm");
+  bindIntRange("locked-cpm", "lockedCpm");
+  bindIntRange("cpm-base", "cpmBase");
+  bindIntRange("cpm-range", "cpmRange");
+
+  bindRange("subdivision", "subdivisionDensity");
+
+  bindCheckbox("lead-enabled", "leadEnabled");
+  bindSelect("lead-synth", "leadSynth", SYNTHS);
+  bindAdsr("lead", "leadAdsr");
+  bindRange("lead-gain", "leadGain");
+
+  bindCheckbox("pad-enabled", "padEnabled");
+  bindSelect("pad-synth", "padSynth", SYNTHS);
+  bindAdsr("pad", "padAdsr");
+  bindRange("pad-gain", "padGain");
+
+  bindCheckbox("drone-enabled", "droneEnabled");
+  bindRange("drone-gain", "droneGain");
+
+  bindExamples();
+  regenerate(true);
+}
+
+document.addEventListener("DOMContentLoaded", init);

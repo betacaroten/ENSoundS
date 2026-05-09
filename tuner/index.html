@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ENS Sound Tuner</title>
+  <link rel="stylesheet" href="src/style.css" />
+</head>
+<body>
+  <main>
+    <h1>ENS Sound Tuner</h1>
+    <p class="sub">Type an ENS name. Twiddle the knobs. Listen for the alien telling you their name.</p>
+
+    <div class="row name-row">
+      <input id="name" type="text" placeholder="lumir" autocomplete="off" autocapitalize="off" />
+      <button id="play" class="primary">▶ Play</button>
+      <button id="stop">■ Stop</button>
+    </div>
+
+    <div id="examples" class="examples">
+      <span class="pill" data-name="lumir">lumir</span>
+      <span class="pill" data-name="betacaroten">betacaroten</span>
+      <span class="pill" data-name="vitalik">vitalik</span>
+      <span class="pill" data-name="aata">aata</span>
+      <span class="pill" data-name="mrq">mrq</span>
+      <span class="pill" data-name="abi">abi</span>
+      <span class="pill" data-name="alžběta">alžběta</span>
+    </div>
+
+    <div class="panels">
+
+      <section class="panel">
+        <h2>Scale &amp; Tempo</h2>
+
+        <div class="field toggle">
+          <label for="lock-scale">Lock scale</label>
+          <input id="lock-scale" type="checkbox" />
+        </div>
+        <div class="field">
+          <label for="locked-scale">Locked to</label>
+          <select id="locked-scale"></select>
+          <span class="val"></span>
+        </div>
+
+        <div class="field toggle">
+          <label for="lock-cpm">Lock cpm</label>
+          <input id="lock-cpm" type="checkbox" />
+        </div>
+        <div class="field">
+          <label for="locked-cpm">Locked cpm</label>
+          <input id="locked-cpm" type="range" min="40" max="200" step="1" />
+          <span class="val" id="locked-cpm-val"></span>
+        </div>
+        <div class="field">
+          <label for="cpm-base">Derived: base</label>
+          <input id="cpm-base" type="range" min="40" max="180" step="1" />
+          <span class="val" id="cpm-base-val"></span>
+        </div>
+        <div class="field">
+          <label for="cpm-range">Derived: range</label>
+          <input id="cpm-range" type="range" min="0" max="120" step="1" />
+          <span class="val" id="cpm-range-val"></span>
+        </div>
+
+        <div class="field">
+          <label for="subdivision">Subdivision density</label>
+          <input id="subdivision" type="range" min="0" max="1" step="0.01" />
+          <span class="val" id="subdivision-val"></span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Lead</h2>
+        <div class="field toggle">
+          <label for="lead-enabled">Enabled</label>
+          <input id="lead-enabled" type="checkbox" />
+        </div>
+        <div class="field">
+          <label for="lead-synth">Synth</label>
+          <select id="lead-synth"></select>
+          <span class="val"></span>
+        </div>
+        <div class="adsr-grid">
+          <div class="cell">
+            <label>A</label>
+            <input id="lead-a" type="range" min="0" max="2" step="0.01" />
+            <span class="val" id="lead-a-val"></span>
+          </div>
+          <div class="cell">
+            <label>D</label>
+            <input id="lead-d" type="range" min="0" max="2" step="0.01" />
+            <span class="val" id="lead-d-val"></span>
+          </div>
+          <div class="cell">
+            <label>S</label>
+            <input id="lead-s" type="range" min="0" max="2" step="0.01" />
+            <span class="val" id="lead-s-val"></span>
+          </div>
+          <div class="cell">
+            <label>R</label>
+            <input id="lead-r" type="range" min="0" max="3" step="0.01" />
+            <span class="val" id="lead-r-val"></span>
+          </div>
+        </div>
+        <div class="field" style="margin-top:10px">
+          <label for="lead-gain">Gain</label>
+          <input id="lead-gain" type="range" min="0" max="1" step="0.01" />
+          <span class="val" id="lead-gain-val"></span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Pad</h2>
+        <div class="field toggle">
+          <label for="pad-enabled">Enabled</label>
+          <input id="pad-enabled" type="checkbox" />
+        </div>
+        <div class="field">
+          <label for="pad-synth">Synth</label>
+          <select id="pad-synth"></select>
+          <span class="val"></span>
+        </div>
+        <div class="adsr-grid">
+          <div class="cell">
+            <label>A</label>
+            <input id="pad-a" type="range" min="0" max="2" step="0.01" />
+            <span class="val" id="pad-a-val"></span>
+          </div>
+          <div class="cell">
+            <label>D</label>
+            <input id="pad-d" type="range" min="0" max="2" step="0.01" />
+            <span class="val" id="pad-d-val"></span>
+          </div>
+          <div class="cell">
+            <label>S</label>
+            <input id="pad-s" type="range" min="0" max="5" step="0.01" />
+            <span class="val" id="pad-s-val"></span>
+          </div>
+          <div class="cell">
+            <label>R</label>
+            <input id="pad-r" type="range" min="0" max="3" step="0.01" />
+            <span class="val" id="pad-r-val"></span>
+          </div>
+        </div>
+        <div class="field" style="margin-top:10px">
+          <label for="pad-gain">Gain</label>
+          <input id="pad-gain" type="range" min="0" max="1" step="0.01" />
+          <span class="val" id="pad-gain-val"></span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Drone (shared)</h2>
+        <p class="sub" style="margin-top:0">A low sine root tone — the &ldquo;ENS voice&rdquo; signature underneath every name.</p>
+        <div class="field toggle">
+          <label for="drone-enabled">Enabled</label>
+          <input id="drone-enabled" type="checkbox" />
+        </div>
+        <div class="field">
+          <label for="drone-gain">Gain</label>
+          <input id="drone-gain" type="range" min="0" max="1" step="0.01" />
+          <span class="val" id="drone-gain-val"></span>
+        </div>
+      </section>
+
+    </div>
+
+    <section class="panel code-panel">
+      <header>
+        <h2>Generated Strudel</h2>
+        <div class="actions">
+          <button id="reset" class="danger">Reset to generated</button>
+        </div>
+      </header>
+      <textarea id="code" spellcheck="false"></textarea>
+      <div id="status" class="status"></div>
+    </section>
+
+  </main>
+
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
