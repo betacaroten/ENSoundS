@@ -1,7 +1,7 @@
 import { renderStrudel } from "../../lib/generator.js";
 import { SCALE_POOL, SYNTHS } from "../../lib/mapping.js";
 import { defaults } from "../../lib/defaults.js";
-import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs } from "../../lib/charviz.js";
+import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs, fitCanvasToCSS } from "../../lib/charviz.js";
 
 const STORAGE_KEY = "ens-tuner-state-v1";
 
@@ -282,6 +282,8 @@ function setSelectedLine(idx) {
 }
 
 function init() {
+  fitCanvasToCSS($("test-canvas"));
+
   const namesTa = $("names");
   if (!namesTa.value.trim()) {
     namesTa.value = DEFAULT_NAMES.join("\n");

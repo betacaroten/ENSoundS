@@ -1,7 +1,7 @@
 import { renderStrudel } from "../../lib/generator.js";
 import { normalize } from "../../lib/mapping.js";
 import { defaults } from "../../lib/defaults.js";
-import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs } from "../../lib/charviz.js";
+import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs, fitCanvasToCSS } from "../../lib/charviz.js";
 
 let strudelReady = false;
 let strudelMod = null;
@@ -200,6 +200,7 @@ function route() {
 }
 
 function init() {
+  fitCanvasToCSS($("test-canvas"));
   $("play").addEventListener("click", onPlay);
   $("stop").addEventListener("click", onStop);
   $("copy").addEventListener("click", onCopy);

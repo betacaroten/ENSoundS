@@ -1,6 +1,6 @@
 import { renderStrudel } from "../../lib/generator.js";
 import { defaults } from "../../lib/defaults.js";
-import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs } from "../../lib/charviz.js";
+import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs, fitCanvasToCSS } from "../../lib/charviz.js";
 import {
   DEFAULT_RPC,
   makeClient,
@@ -40,7 +40,7 @@ let cancelVizFn = () => {};
 
 const recent = [];
 
-const IDLE_DRONE = `setcpm(60)\n\t$: n("<-12>").scale("c:minor").s("sine").gain(.4).tscope({ id: 1, color: "#7cd1ff", thickness: 2, scale: .35, pos: .5 })`;
+const IDLE_DRONE = `setcpm(60)\n\t$: n("<-12>").scale("c:minor").s("sine").gain(.4).tscope({ id: 1, color: "#7cd1ff", thickness: 2, scale: 1.6, pos: .5 })`;
 
 function $(id) { return document.getElementById(id); }
 
@@ -287,6 +287,7 @@ function bindSettings() {
 }
 
 function init() {
+  fitCanvasToCSS($("test-canvas"));
   $("start").addEventListener("click", start);
   $("stop").addEventListener("click", stop);
   bindSettings();
