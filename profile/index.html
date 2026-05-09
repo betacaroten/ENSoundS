@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ENS Sound</title>
+  <link rel="stylesheet" href="src/style.css" />
+</head>
+<body>
+  <main id="app">
+
+    <section id="landing" class="hidden">
+      <h1>ENS Sound</h1>
+      <p class="sub">Every ENS name has a melody. Type one to hear it.</p>
+      <form id="landing-form" class="row name-row">
+        <input id="landing-name" type="text" placeholder="vitalik.eth" autocomplete="off" autocapitalize="off" autocorrect="off" />
+        <button type="submit" class="primary">Hear it</button>
+      </form>
+      <div class="examples" id="examples">
+        <span class="pill" data-name="vitalik.eth">vitalik.eth</span>
+        <span class="pill" data-name="lumir.eth">lumir.eth</span>
+        <span class="pill" data-name="betacaroten.eth">betacaroten.eth</span>
+        <span class="pill" data-name="aata.eth">aata.eth</span>
+        <span class="pill" data-name="alžběta.eth">alžběta.eth</span>
+      </div>
+    </section>
+
+    <section id="profile" class="hidden">
+      <a id="back" href="#" class="back">← change name</a>
+
+      <h1 id="name-display">&nbsp;</h1>
+      <p id="normalized-note" class="sub muted hidden">playing as: <code id="normalized">&nbsp;</code></p>
+
+      <div id="char-viz" class="char-viz" aria-hidden="true"></div>
+
+      <div class="row">
+        <button id="play" class="primary big">▶ Tap to play</button>
+        <button id="stop">■ Stop</button>
+        <button id="copy">Copy link</button>
+        <a id="tune-link" class="link" href="../tuner/">Tune this →</a>
+      </div>
+
+      <div id="status" class="status"></div>
+
+      <details class="details">
+        <summary>What you're hearing</summary>
+        <div class="meta">
+          <div><span class="k">Scale</span><span class="v" id="meta-scale"></span></div>
+          <div><span class="k">cpm</span><span class="v" id="meta-cpm"></span></div>
+          <div><span class="k">Events</span><span class="v" id="meta-events"></span></div>
+          <div><span class="k">One pass</span><span class="v" id="meta-duration"></span></div>
+        </div>
+        <div class="bytes-row">
+          <span class="k">UTF-8 bytes</span>
+          <code id="meta-bytes" class="bytes"></code>
+        </div>
+        <h3>Strudel code</h3>
+        <pre id="code"></pre>
+      </details>
+
+    </section>
+
+  </main>
+
+  <script type="module" src="src/profile.js"></script>
+</body>
+</html>
