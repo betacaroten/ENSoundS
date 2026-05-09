@@ -500,6 +500,8 @@ function init() {
   bindRange("lead-gain", "leadGain");
   bindIntRange("lead-lpf", "leadLpf");
   bindIntRange("lead-hpf", "leadHpf");
+  bindRange("lead-lpq", "leadLpq", (v) => v.toFixed(1));
+  bindRange("lead-shape", "leadShape");
 
   bindCheckbox("pad-enabled", "padEnabled");
   bindSelect("pad-synth", "padSynth", SYNTHS);
@@ -507,12 +509,16 @@ function init() {
   bindRange("pad-gain", "padGain");
   bindIntRange("pad-lpf", "padLpf");
   bindIntRange("pad-hpf", "padHpf");
+  bindRange("pad-lpq", "padLpq", (v) => v.toFixed(1));
+  bindRange("pad-shape", "padShape");
 
   bindCheckbox("drone-enabled", "droneEnabled");
   bindRange("drone-gain", "droneGain");
   bindIntRange("drone-semitones", "droneSemitones");
   bindIntRange("drone-lpf", "droneLpf");
   bindIntRange("drone-hpf", "droneHpf");
+  bindRange("drone-lpq", "droneLpq", (v) => v.toFixed(1));
+  bindRange("drone-shape", "droneShape");
 
   bindCheckbox("aux-enabled", "auxEnabled");
   bindSelect("aux-synth", "auxSynth", SYNTHS);
@@ -521,6 +527,11 @@ function init() {
   bindIntRange("aux-semitones", "auxSemitones");
   bindIntRange("aux-lpf", "auxLpf");
   bindIntRange("aux-hpf", "auxHpf");
+  bindRange("aux-lpq", "auxLpq", (v) => v.toFixed(1));
+  bindRange("aux-shape", "auxShape");
+
+  bindRange("master-room", "masterRoom");
+  bindRange("master-delay", "masterDelay");
 
   const params = new URLSearchParams(location.search);
   const handoff = params.get("name");
