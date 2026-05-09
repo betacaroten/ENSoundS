@@ -1,6 +1,6 @@
 import { renderStrudel } from "../../lib/generator.js";
-import { normalize } from "../../lib/mapping.js";
 import { defaults } from "../../lib/defaults.js";
+import { mountCharViz, animateCharViz, clearCharViz } from "../../lib/charviz.js";
 import {
   DEFAULT_RPC,
   makeClient,
@@ -35,7 +35,7 @@ let currentTimer = null;
 let queue = [];
 
 let charSpans = [];
-let vizRafId = 0;
+let cancelVizFn = () => {};
 
 const recent = [];
 
@@ -74,60 +74,18 @@ function shortAddr(a) {
 }
 
 function clearViz() {
-  if (vizRafId) { cancelAnimationFrame(vizRafId); vizRafId = 0; }
-  for (const c of charSpans) c.el.classList.remove("active");
+  cancelVizFn();
+  cancelVizFn = () => {};
+  clearCharViz(charSpans);
 }
 
 function renderCharViz(name) {
-  const viz = $("char-viz");
-  viz.innerHTML = "";
-  charSpans = [];
-  if (!name) return;
-  const enc = new TextEncoder();
-  const normalized = normalize(name);
-  const normLen = enc.encode(normalized).length;
-  const isPrefix = name.startsWith(normalized) && name !== normalized;
-
-  let offset = 0;
-  for (const ch of name) {
-    const len = enc.encode(ch).length;
-    const span = document.createElement("span");
-    span.className = "char";
-    span.textContent = ch === " " ? "·" : ch;
-    let start = offset;
-    let end = offset + len;
-    if (isPrefix && offset >= normLen) {
-      start = -1;
-      end = -1;
-      span.classList.add("dim");
-    } else if (isPrefix && end > normLen) {
-      end = normLen;
-    }
-    charSpans.push({ el: span, start, end });
-    viz.appendChild(span);
-    offset += len;
-  }
+  charSpans = mountCharViz($("char-viz"), name, { dimBeyondNormalized: true });
 }
 
 function startViz(noteSeconds, totalEvents) {
-  clearViz();
-  if (!charSpans.length || totalEvents <= 0) return;
-  const start = performance.now();
-  const noteMs = noteSeconds * 1000;
-  const step = (now) => {
-    const idx = Math.floor((now - start) / noteMs);
-    if (idx >= totalEvents) {
-      for (const c of charSpans) c.el.classList.remove("active");
-      vizRafId = 0;
-      return;
-    }
-    for (const c of charSpans) {
-      const active = c.start >= 0 && idx >= c.start && idx < c.end;
-      c.el.classList.toggle("active", active);
-    }
-    vizRafId = requestAnimationFrame(step);
-  };
-  vizRafId = requestAnimationFrame(step);
+  cancelVizFn();
+  cancelVizFn = animateCharViz(charSpans, noteSeconds, totalEvents);
 }
 
 async function ensureStrudel() {
