@@ -40,7 +40,8 @@ let cancelVizFn = () => {};
 
 const recent = [];
 
-const IDLE_DRONE = `setcpm(60)\n\t$: n("<-12>").scale("c:minor").s("sine").gain(.4).tscope({ id: 1, color: "#7cd1ff", thickness: 2, scale: 1.6, pos: .5 })`;
+const BG_DRONE_LINE = `\t$: note("c2").s("sine").gain(.4).attack(2).release(4).tscope({ id: 1, color: "#7cd1ff", thickness: 2, scale: 1.6, pos: .5 })`;
+const IDLE_DRONE = `setcpm(60)\n${BG_DRONE_LINE}`;
 
 function $(id) { return document.getElementById(id); }
 
@@ -114,13 +115,14 @@ async function evaluateIdle() {
 
 async function playName(entry) {
   current = entry;
-  const r = renderStrudel(entry.name, { ...defaults, scope: true });
+  const r = renderStrudel(entry.name, { ...defaults, scope: true, droneEnabled: false });
+  const codeWithBg = r.code + "\n" + BG_DRONE_LINE;
   $("now-playing").textContent = entry.name;
   $("now-playing-row").classList.add("on");
   renderCharViz(entry.name);
   let delayMs = 0;
   try {
-    await evalStrudel(r.code);
+    await evalStrudel(codeWithBg);
     delayMs = nextCycleDelayMs(strudelRepl);
     setTimeout(() => startViz(r.noteSeconds, r.events), delayMs);
   } catch (e) {
