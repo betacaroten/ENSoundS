@@ -163,6 +163,26 @@ function bindIntRange(id, key) {
   el.addEventListener("input", () => { state[key] = Math.round(+el.value); });
 }
 
+function bindText(id, key) {
+  const el = $(id);
+  el.value = state[key] ?? "";
+  el.addEventListener("input", () => {
+    state[key] = el.value;
+    saveState();
+    regenerate();
+  });
+}
+
+function populateDatalist(id, options) {
+  const el = $(id);
+  el.innerHTML = "";
+  for (const opt of options) {
+    const o = document.createElement("option");
+    o.value = opt;
+    el.appendChild(o);
+  }
+}
+
 function bindSizesText(id, key) {
   const el = $(id);
   el.value = (state[key] || []).join(" ");
@@ -246,7 +266,8 @@ function init() {
   });
 
   bindCheckbox("lock-scale", "lockScale");
-  bindSelect("locked-scale", "lockedScale", SCALE_POOL);
+  populateDatalist("scale-suggestions", SCALE_POOL);
+  bindText("locked-scale", "lockedScale");
 
   bindCheckbox("lock-cpm", "lockCpm");
   bindIntRange("locked-cpm", "lockedCpm");
@@ -255,6 +276,7 @@ function init() {
 
   bindSizesText("sub-sizes", "subSizes");
   bindIntRange("sub-step", "subStep");
+  bindIntRange("note-offset", "noteOffset");
 
   bindCheckbox("lead-enabled", "leadEnabled");
   bindSelect("lead-synth", "leadSynth", SYNTHS);

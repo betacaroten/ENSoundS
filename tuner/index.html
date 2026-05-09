@@ -40,9 +40,10 @@
         </div>
         <div class="field">
           <label for="locked-scale">Locked to</label>
-          <select id="locked-scale"></select>
+          <input id="locked-scale" type="text" list="scale-suggestions" autocomplete="off" placeholder="f#:minor" />
           <span class="val"></span>
         </div>
+        <datalist id="scale-suggestions"></datalist>
 
         <div class="field toggle">
           <label for="lock-cpm">Lock cpm</label>
@@ -73,6 +74,11 @@
           <label for="sub-step">Subdivision step</label>
           <input id="sub-step" type="range" min="0" max="16" step="1" />
           <span class="val" id="sub-step-val"></span>
+        </div>
+        <div class="field">
+          <label for="note-offset">Note offset</label>
+          <input id="note-offset" type="range" min="-24" max="24" step="1" />
+          <span class="val" id="note-offset-val"></span>
         </div>
       </section>
 
