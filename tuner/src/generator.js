@@ -25,7 +25,13 @@ export function renderStrudel(name, options) {
     );
   }
 
-  return lines.join("\n");
+  const cycleSeconds = 60 / params.cpm;
+  return {
+    code: lines.join("\n"),
+    noteSeconds: cycleSeconds,
+    events: params.events,
+    durationSeconds: params.events * cycleSeconds,
+  };
 }
 
 function formatAdsr([a, d, s, r]) {

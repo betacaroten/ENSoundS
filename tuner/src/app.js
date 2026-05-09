@@ -27,6 +27,12 @@ let state = loadState();
 let userEdited = false;
 let strudelReady = false;
 let strudelMod = null;
+let lastDuration = 0;
+let lastNoteSeconds = 0.1;
+let lastEvents = 0;
+let charSpans = [];
+let stopTimer = null;
+let vizRafId = 0;
 
 function loadState() {
   try {
@@ -52,9 +58,74 @@ function regenerate(force = false) {
     return;
   }
   const name = $("name").value;
-  $("code").value = renderStrudel(name, state);
+  const { code, durationSeconds, noteSeconds, events } = renderStrudel(name, state);
+  $("code").value = code;
+  lastDuration = durationSeconds;
+  lastNoteSeconds = noteSeconds;
+  lastEvents = events;
+  renderCharViz(name);
   userEdited = false;
-  setStatus(name ? `Generated for "${name}"` : "Type a name above", false);
+  setStatus(
+    name ? `Generated for "${name}" (one pass: ${durationSeconds.toFixed(1)}s)` : "Type a name above",
+    false
+  );
+}
+
+function renderCharViz(name) {
+  const viz = $("char-viz");
+  viz.innerHTML = "";
+  charSpans = [];
+  if (!name) return;
+  const enc = new TextEncoder();
+  let offset = 0;
+  for (const ch of name) {
+    const len = enc.encode(ch).length;
+    const span = document.createElement("span");
+    span.className = "char";
+    span.textContent = ch === " " ? "·" : ch;
+    charSpans.push({ el: span, start: offset, end: offset + len });
+    viz.appendChild(span);
+    offset += len;
+  }
+}
+
+function setActiveChar(byteIdx) {
+  for (const c of charSpans) {
+    const active = byteIdx >= c.start && byteIdx < c.end;
+    c.el.classList.toggle("active", active);
+  }
+}
+
+function clearActiveChar() {
+  for (const c of charSpans) c.el.classList.remove("active");
+}
+
+function startViz() {
+  cancelViz();
+  if (!charSpans.length || lastEvents <= 0) return;
+  const start = performance.now();
+  const noteMs = lastNoteSeconds * 1000;
+  const totalEvents = lastEvents;
+  const step = (now) => {
+    const elapsed = now - start;
+    const idx = Math.floor(elapsed / noteMs);
+    if (idx >= totalEvents) {
+      clearActiveChar();
+      vizRafId = 0;
+      return;
+    }
+    setActiveChar(idx);
+    vizRafId = requestAnimationFrame(step);
+  };
+  vizRafId = requestAnimationFrame(step);
+}
+
+function cancelViz() {
+  if (vizRafId) {
+    cancelAnimationFrame(vizRafId);
+    vizRafId = 0;
+  }
+  clearActiveChar();
 }
 
 function setStatus(msg, dirty) {
@@ -77,11 +148,24 @@ async function ensureStrudel() {
 async function onPlay() {
   try {
     await ensureStrudel();
+    clearStopTimer();
     const code = $("code").value;
     const evalFn = strudelMod.evaluate || window.evaluate;
     if (!evalFn) throw new Error("Strudel evaluate() not available");
     await evalFn(code);
-    setStatus("Playing.", false);
+    startViz();
+    if (lastDuration > 0) {
+      setStatus(`Playing… auto-stop in ${lastDuration.toFixed(1)}s`, false);
+      stopTimer = setTimeout(() => {
+        const hush = strudelMod?.hush || window.hush;
+        if (hush) hush();
+        cancelViz();
+        setStatus("Done.", false);
+        stopTimer = null;
+      }, Math.max(0, lastDuration * 1000 - 100));
+    } else {
+      setStatus("Playing.", false);
+    }
   } catch (e) {
     console.error(e);
     setStatus("Play failed: " + (e.message || e), true);
@@ -89,12 +173,21 @@ async function onPlay() {
 }
 
 function onStop() {
+  clearStopTimer();
+  cancelViz();
   try {
     const hush = strudelMod?.hush || window.hush;
     if (hush) hush();
     setStatus("Stopped.", false);
   } catch (e) {
     console.error(e);
+  }
+}
+
+function clearStopTimer() {
+  if (stopTimer) {
+    clearTimeout(stopTimer);
+    stopTimer = null;
   }
 }
 

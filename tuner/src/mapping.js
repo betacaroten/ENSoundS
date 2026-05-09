@@ -26,7 +26,7 @@ export function deriveParams(name, options) {
 
   const melody = bytesToMelody(bytes, options.subdivisionDensity, seed);
 
-  return { scale, cpm, melody, bytes, seed };
+  return { scale, cpm, melody, bytes, seed, events: bytes.length || 1 };
 }
 
 function noteFromByte(byte) {
