@@ -33,35 +33,10 @@
           <input id="loop-enabled" type="checkbox" />
         </div>
 
-        <div class="field toggle">
-          <label for="lock-scale">Lock scale</label>
-          <input id="lock-scale" type="checkbox" />
-        </div>
         <div class="field">
-          <label for="locked-scale">Locked to</label>
-          <input id="locked-scale" type="text" list="scale-suggestions" autocomplete="off" placeholder="f#:minor" />
-          <span class="val"></span>
-        </div>
-        <datalist id="scale-suggestions"></datalist>
-
-        <div class="field toggle">
-          <label for="lock-cpm">Lock cpm</label>
-          <input id="lock-cpm" type="checkbox" />
-        </div>
-        <div class="field">
-          <label for="locked-cpm">Locked cpm</label>
+          <label for="locked-cpm">CPM</label>
           <input id="locked-cpm" type="range" min="40" max="400" step="1" />
           <span class="val" id="locked-cpm-val"></span>
-        </div>
-        <div class="field">
-          <label for="cpm-base">Derived: base</label>
-          <input id="cpm-base" type="range" min="40" max="180" step="1" />
-          <span class="val" id="cpm-base-val"></span>
-        </div>
-        <div class="field">
-          <label for="cpm-range">Derived: range</label>
-          <input id="cpm-range" type="range" min="0" max="120" step="1" />
-          <span class="val" id="cpm-range-val"></span>
         </div>
 
         <div class="field">

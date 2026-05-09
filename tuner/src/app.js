@@ -1,5 +1,5 @@
 import { renderStrudel } from "../../lib/generator.js";
-import { SCALE_POOL, SYNTHS } from "../../lib/mapping.js";
+import { SYNTHS } from "../../lib/mapping.js";
 import { defaults } from "../../lib/defaults.js";
 import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs, fitCanvasToCSS } from "../../lib/charviz.js";
 
@@ -204,26 +204,6 @@ function bindIntRange(id, key) {
   el.addEventListener("input", () => { state[key] = Math.round(+el.value); });
 }
 
-function bindText(id, key) {
-  const el = $(id);
-  el.value = state[key] ?? "";
-  el.addEventListener("input", () => {
-    state[key] = el.value;
-    saveState();
-    regenerate();
-  });
-}
-
-function populateDatalist(id, options) {
-  const el = $(id);
-  el.innerHTML = "";
-  for (const opt of options) {
-    const o = document.createElement("option");
-    o.value = opt;
-    el.appendChild(o);
-  }
-}
-
 function bindSizesText(id, key) {
   const el = $(id);
   el.value = (state[key] || []).join(" ");
@@ -343,15 +323,7 @@ function init() {
   });
 
   bindCheckbox("loop-enabled", "loopEnabled");
-  bindCheckbox("lock-scale", "lockScale");
-  populateDatalist("scale-suggestions", SCALE_POOL);
-  
-  bindText("locked-scale", "lockedScale");
-
-  bindCheckbox("lock-cpm", "lockCpm");
   bindIntRange("locked-cpm", "lockedCpm");
-  bindIntRange("cpm-base", "cpmBase");
-  bindIntRange("cpm-range", "cpmRange");
 
   bindSizesText("sub-sizes", "subSizes");
   bindIntRange("sub-step", "subStep");
