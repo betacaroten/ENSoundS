@@ -2,6 +2,7 @@ import { renderStrudel } from "../../lib/generator.js";
 import { SYNTHS } from "../../lib/mapping.js";
 import { loadOptions, saveOptions } from "../../lib/state.js";
 import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs, fitCanvasToCSS } from "../../lib/charviz.js";
+import { connectMIDI, onCC, midiSupported, listInputs } from "../../lib/midi.js";
 
 let state = loadOptions();
 let userEdited = false;
@@ -281,6 +282,177 @@ function setSelectedLine(idx) {
   ta.setSelectionRange(pos, pos + (lines[idx]?.length ?? 0));
 }
 
+let midiConnected = false;
+let midiLearnMode = false;
+let midiArmedId = null;
+const midiPendingCC = new Map();
+let midiRaf = 0;
+
+async function onMidiClick() {
+  try {
+    if (!midiConnected) {
+      if (!midiSupported()) {
+        setStatus("Web MIDI not supported in this browser.", true);
+        return;
+      }
+      await connectMIDI();
+      onCC(handleCC);
+      midiConnected = true;
+      const inputs = listInputs();
+      const desc = inputs.length ? inputs.map((i) => i.name).join(", ") : "no inputs";
+      setStatus(`MIDI: ${desc}. Click MIDI again to enter Learn mode.`);
+      $("midi").classList.add("connected");
+      refreshMidiTags();
+      return;
+    }
+    midiLearnMode = !midiLearnMode;
+    document.body.classList.toggle("midi-learn", midiLearnMode);
+    $("midi").classList.toggle("learn", midiLearnMode);
+    if (midiLearnMode) {
+      document.addEventListener("click", onLearnClick, true);
+      setStatus("MIDI Learn: click a slider, then twist a knob. Click MIDI again to exit.");
+    } else {
+      document.removeEventListener("click", onLearnClick, true);
+      midiArmedId = null;
+      clearArmedHighlight();
+      setStatus("MIDI ready. Twist your knobs.");
+    }
+  } catch (e) {
+    console.error(e);
+    setStatus("MIDI failed: " + (e.message || e), true);
+  }
+}
+
+function isLearnable(el) {
+  return el?.tagName === "INPUT" && el.id && (el.type === "range" || el.type === "checkbox");
+}
+
+function onLearnClick(e) {
+  const el = e.target;
+  if (!isLearnable(el)) return;
+  e.preventDefault();
+  e.stopPropagation();
+  if (state.midiBindings?.[el.id] && midiArmedId !== el.id) {
+    delete state.midiBindings[el.id];
+    saveState();
+    refreshMidiTags();
+    setStatus(`Unbound ${el.id} · saved.`);
+    midiArmedId = null;
+    clearArmedHighlight();
+    return;
+  }
+  clearArmedHighlight();
+  midiArmedId = el.id;
+  el.classList.add("midi-arm");
+  setStatus(`Armed: ${el.id}. Twist a knob.`);
+}
+
+function clearArmedHighlight() {
+  document.querySelectorAll(".midi-arm").forEach((e) => e.classList.remove("midi-arm"));
+}
+
+function handleCC(channel, cc, value, deviceName) {
+  if (midiLearnMode && midiArmedId) {
+    if (!state.midiBindings) state.midiBindings = {};
+    state.midiBindings[midiArmedId] = { cc, channel, deviceName };
+    saveState();
+    refreshMidiTags();
+    setStatus(`Bound CC ${cc} (${deviceName}) → ${midiArmedId} · saved.`);
+    document.getElementById(midiArmedId)?.classList.remove("midi-arm");
+    midiArmedId = null;
+    return;
+  }
+  const bindings = state.midiBindings || {};
+  let target = null;
+  for (const [id, b] of Object.entries(bindings)) {
+    if (b.cc === cc) { target = id; break; }
+  }
+  if (target) {
+    midiPendingCC.set(target, value);
+    if (!midiRaf) {
+      midiRaf = requestAnimationFrame(() => {
+        midiRaf = 0;
+        for (const [id, v] of midiPendingCC) {
+          applyMidiValue(document.getElementById(id), v);
+        }
+        midiPendingCC.clear();
+      });
+    }
+  } else {
+    console.log(`MIDI in: device=${deviceName} ch=${channel} cc=${cc} val=${value}`);
+  }
+}
+
+function applyMidiValue(el, cc) {
+  if (!el) return;
+  if (el.type === "checkbox") {
+    const next = cc >= 64;
+    if (el.checked === next) return;
+    el.checked = next;
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  } else if (el.type === "range") {
+    const min = parseFloat(el.min);
+    const max = parseFloat(el.max);
+    const step = parseFloat(el.step) || 1;
+    let v = min + (cc / 127) * (max - min);
+    v = Math.round(v / step) * step;
+    if (v < min) v = min;
+    if (v > max) v = max;
+    if (parseFloat(el.value) === v) return;
+    el.value = v;
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+}
+
+function refreshMidiTags() {
+  document.querySelectorAll(".midi-cc-tag").forEach((t) => t.remove());
+  const bindings = state.midiBindings || {};
+  for (const [id, b] of Object.entries(bindings)) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    const tag = document.createElement("span");
+    tag.className = "midi-cc-tag";
+    tag.textContent = `● CC ${b.cc}`;
+    tag.title = "Click in Learn mode to unbind";
+    el.insertAdjacentElement("afterend", tag);
+  }
+}
+
+async function onExportMidi() {
+  const json = JSON.stringify(state.midiBindings || {}, null, 2);
+  try {
+    await navigator.clipboard.writeText(json);
+    setStatus("MIDI mapping copied to clipboard.");
+  } catch {
+    console.log(json);
+    setStatus("Clipboard blocked — mapping logged to console.", true);
+  }
+}
+
+function onImportMidi() {
+  const current = JSON.stringify(state.midiBindings || {}, null, 2);
+  const input = prompt("Paste MIDI mapping JSON (replaces current):", current);
+  if (input === null) return;
+  try {
+    const parsed = JSON.parse(input);
+    if (typeof parsed !== "object" || Array.isArray(parsed) || parsed === null) {
+      throw new Error("expected an object");
+    }
+    for (const [id, b] of Object.entries(parsed)) {
+      if (typeof b !== "object" || b === null || typeof b.cc !== "number") {
+        throw new Error(`invalid binding for "${id}"`);
+      }
+    }
+    state.midiBindings = parsed;
+    saveState();
+    refreshMidiTags();
+    const n = Object.keys(parsed).length;
+    setStatus(`Imported ${n} MIDI binding${n === 1 ? "" : "s"} · saved.`);
+  } catch (e) {
+    setStatus(`Import failed: ${e.message || e}`, true);
+  }
+}
+
 function init() {
   fitCanvasToCSS($("test-canvas"));
 
@@ -302,6 +474,9 @@ function init() {
   $("play-all").addEventListener("click", onPlayAll);
   $("reset").addEventListener("click", () => regenerate(true));
   $("export-defaults").addEventListener("click", onExportDefaults);
+  $("midi").addEventListener("click", onMidiClick);
+  $("midi-export").addEventListener("click", onExportMidi);
+  $("midi-import").addEventListener("click", onImportMidi);
 
   $("code").addEventListener("input", () => {
     userEdited = true;
@@ -358,6 +533,13 @@ function init() {
   }
 
   regenerate(true);
+  refreshMidiTags();
+
+  const bindingCount = Object.keys(state.midiBindings || {}).length;
+  if (bindingCount > 0) {
+    console.log(`MIDI bindings loaded from localStorage:`, state.midiBindings);
+    setStatus(`Generated. ${bindingCount} MIDI binding${bindingCount === 1 ? "" : "s"} restored — click MIDI to connect.`);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", init);
