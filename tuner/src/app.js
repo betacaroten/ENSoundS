@@ -502,6 +502,12 @@ function init() {
   bindIntRange("lead-hpf", "leadHpf");
   bindRange("lead-lpq", "leadLpq", (v) => v.toFixed(1));
   bindRange("lead-shape", "leadShape");
+  bindIntRange("lead-bpf", "leadBpf");
+  bindRange("lead-bpq", "leadBpq", (v) => v.toFixed(1));
+  bindRange("lead-vib", "leadVib", (v) => v.toFixed(1));
+  bindRange("lead-detune", "leadDetune");
+  bindRange("lead-fm", "leadFm", (v) => v.toFixed(1));
+  bindRange("lead-fmh", "leadFmh", (v) => v.toFixed(1));
 
   bindCheckbox("pad-enabled", "padEnabled");
   bindSelect("pad-synth", "padSynth", SYNTHS);
@@ -511,6 +517,12 @@ function init() {
   bindIntRange("pad-hpf", "padHpf");
   bindRange("pad-lpq", "padLpq", (v) => v.toFixed(1));
   bindRange("pad-shape", "padShape");
+  bindIntRange("pad-bpf", "padBpf");
+  bindRange("pad-bpq", "padBpq", (v) => v.toFixed(1));
+  bindRange("pad-vib", "padVib", (v) => v.toFixed(1));
+  bindRange("pad-detune", "padDetune");
+  bindRange("pad-fm", "padFm", (v) => v.toFixed(1));
+  bindRange("pad-fmh", "padFmh", (v) => v.toFixed(1));
 
   bindCheckbox("drone-enabled", "droneEnabled");
   bindRange("drone-gain", "droneGain");
@@ -519,6 +531,12 @@ function init() {
   bindIntRange("drone-hpf", "droneHpf");
   bindRange("drone-lpq", "droneLpq", (v) => v.toFixed(1));
   bindRange("drone-shape", "droneShape");
+  bindIntRange("drone-bpf", "droneBpf");
+  bindRange("drone-bpq", "droneBpq", (v) => v.toFixed(1));
+  bindRange("drone-vib", "droneVib", (v) => v.toFixed(1));
+  bindRange("drone-detune", "droneDetune");
+  bindRange("drone-fm", "droneFm", (v) => v.toFixed(1));
+  bindRange("drone-fmh", "droneFmh", (v) => v.toFixed(1));
 
   bindCheckbox("aux-enabled", "auxEnabled");
   bindSelect("aux-synth", "auxSynth", SYNTHS);
@@ -529,6 +547,12 @@ function init() {
   bindIntRange("aux-hpf", "auxHpf");
   bindRange("aux-lpq", "auxLpq", (v) => v.toFixed(1));
   bindRange("aux-shape", "auxShape");
+  bindIntRange("aux-bpf", "auxBpf");
+  bindRange("aux-bpq", "auxBpq", (v) => v.toFixed(1));
+  bindRange("aux-vib", "auxVib", (v) => v.toFixed(1));
+  bindRange("aux-detune", "auxDetune");
+  bindRange("aux-fm", "auxFm", (v) => v.toFixed(1));
+  bindRange("aux-fmh", "auxFmh", (v) => v.toFixed(1));
 
   bindRange("master-room", "masterRoom");
   bindRange("master-delay", "masterDelay");
