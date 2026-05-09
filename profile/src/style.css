@@ -124,6 +124,27 @@ button.big { padding: 14px 22px; font-size: 16px; }
   border-radius: 8px;
 }
 
+.register-banner {
+  margin-top: 18px;
+  padding: 14px 18px;
+  border: 1px solid #2a3140;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(255,184,107,0.08), rgba(255,184,107,0.02));
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.register-banner.hidden { display: none; }
+.register-banner span { color: var(--muted); }
+.register-banner a {
+  color: var(--accent-2);
+  text-decoration: none;
+  font-weight: 600;
+  border-bottom: 1px dashed var(--accent-2);
+}
+.register-banner a:hover { color: #fff; border-bottom-color: #fff; }
+
 .examples {
   margin-top: 20px;
   display: flex;

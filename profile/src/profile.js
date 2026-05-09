@@ -2,6 +2,20 @@ import { renderStrudel } from "../../lib/generator.js";
 import { normalize } from "../../lib/mapping.js";
 import { defaults } from "../../lib/defaults.js";
 import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs, fitCanvasToCSS } from "../../lib/charviz.js";
+import { createPublicClient, http, fallback } from "viem";
+import { mainnet } from "viem/chains";
+
+const PUBLIC_RPCS = [
+  "https://ethereum-rpc.publicnode.com",
+  "https://1rpc.io/eth",
+  "https://eth.llamarpc.com",
+];
+const ensClient = createPublicClient({
+  chain: mainnet,
+  transport: fallback(PUBLIC_RPCS.map((u) => http(u, { retryCount: 0 })), { retryCount: 1 }),
+});
+const ensCheckCache = new Map();
+let ensCheckSeq = 0;
 
 let strudelReady = false;
 let strudelMod = null;
@@ -94,6 +108,51 @@ function renderProfile(name) {
   charSpans = mountCharViz($("char-viz"), name, { dimBeyondNormalized: true });
   $("tune-link").href = "../tuner/?name=" + encodeURIComponent(name);
   setStatus("Tap Play to hear it.");
+  fitCanvasToCSS($("test-canvas"));
+  checkEnsRegistration(name);
+}
+
+function ensNameFor(input) {
+  const n = normalize(input);
+  return n ? `${n}.eth` : "";
+}
+
+async function checkEnsRegistration(input) {
+  const banner = $("register-banner");
+  const link = $("register-link");
+  const text = $("register-text");
+  banner.classList.add("hidden");
+
+  const ensName = ensNameFor(input);
+  if (!ensName) return;
+
+  const seq = ++ensCheckSeq;
+  link.href = `https://app.ens.domains/${encodeURIComponent(ensName)}`;
+  text.textContent = `Checking ${ensName}…`;
+
+  let registered;
+  if (ensCheckCache.has(ensName)) {
+    registered = ensCheckCache.get(ensName);
+  } else {
+    try {
+      const addr = await ensClient.getEnsAddress({ name: ensName });
+      registered = addr != null;
+      ensCheckCache.set(ensName, registered);
+    } catch (e) {
+      console.warn("ENS check failed:", e);
+      return;
+    }
+  }
+  if (seq !== ensCheckSeq) return;
+
+  if (registered) {
+    banner.classList.add("hidden");
+  } else {
+    text.textContent = `${ensName} isn't registered yet.`;
+    link.textContent = `Register on ENS →`;
+    link.href = `https://app.ens.domains/${encodeURIComponent(ensName)}`;
+    banner.classList.remove("hidden");
+  }
 }
 
 function inferScale(code) {
@@ -200,7 +259,6 @@ function route() {
 }
 
 function init() {
-  fitCanvasToCSS($("test-canvas"));
   $("play").addEventListener("click", onPlay);
   $("stop").addEventListener("click", onStop);
   $("copy").addEventListener("click", onCopy);
