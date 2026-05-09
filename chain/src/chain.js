@@ -91,7 +91,7 @@ function startViz(noteSeconds, totalEvents) {
 async function ensureStrudel() {
   if (strudelReady) return;
   setStatus("Loading audio engine…");
-  strudelMod = await import("https://esm.sh/@strudel/web");
+  strudelMod = await import("@strudel/web");
   await strudelMod.initStrudel({ prebake: () => {} });
   strudelReady = true;
 }

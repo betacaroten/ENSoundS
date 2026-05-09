@@ -107,7 +107,7 @@ function inferCpm(code) {
 async function ensureStrudel() {
   if (strudelReady) return;
   setStatus("Loading Strudel…");
-  strudelMod = await import("https://esm.sh/@strudel/web");
+  strudelMod = await import("@strudel/web");
   await strudelMod.initStrudel({ prebake: () => {} });
   strudelReady = true;
 }

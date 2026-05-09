@@ -77,7 +77,7 @@ function setStatus(msg, dirty) {
 async function ensureStrudel() {
   if (strudelReady) return;
   setStatus("Loading Strudel…", false);
-  strudelMod = await import("https://esm.sh/@strudel/web");
+  strudelMod = await import("@strudel/web");
   await strudelMod.initStrudel({
     prebake: () => {},
   });

@@ -1,5 +1,5 @@
-import { createPublicClient, http, fallback } from "https://esm.sh/viem";
-import { mainnet } from "https://esm.sh/viem/chains";
+import { createPublicClient, http, fallback } from "viem";
+import { mainnet } from "viem/chains";
 
 export const DEFAULT_RPC = "";
 
