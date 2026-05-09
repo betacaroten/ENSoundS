@@ -195,7 +195,6 @@ async function pollOnce() {
   try {
     const n = await getLatestBlockNumber(client);
     if (n === lastBlockNumber) return;
-    if (lastBlockNumber === 0n) { lastBlockNumber = n; setBlock(n); return; }
     lastBlockNumber = n;
     setBlock(n);
     setLive(true);
