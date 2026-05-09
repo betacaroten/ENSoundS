@@ -83,8 +83,8 @@ function clearViz() {
   clearCharViz(charSpans);
 }
 
-function renderCharViz(name) {
-  charSpans = mountCharViz($("char-viz"), name, { dimBeyondNormalized: true });
+function renderCharViz(name, byteWeights) {
+  charSpans = mountCharViz($("char-viz"), name, { dimBeyondNormalized: true, byteWeights });
 }
 
 function startViz(noteSeconds, totalEvents) {
@@ -121,7 +121,7 @@ async function playName(entry) {
   const codeWithBg = r.code + "\n" + BG_DRONE_LINE;
   $("now-playing").textContent = entry.name;
   $("now-playing-row").classList.add("on");
-  renderCharViz(entry.name);
+  renderCharViz(entry.name, r.byteWeights);
   let delayMs = 0;
   try {
     await evalStrudel(codeWithBg);

@@ -107,7 +107,7 @@ function renderProfile(name) {
   lastNoteSeconds = result.noteSeconds;
   lastDuration = result.durationSeconds;
 
-  charSpans = mountCharViz($("char-viz"), name, { dimBeyondNormalized: true });
+  charSpans = mountCharViz($("char-viz"), name, { dimBeyondNormalized: true, byteWeights: result.byteWeights });
   $("tune-link").href = "../tuner/?name=" + encodeURIComponent(name);
   setStatus("Tap Play to hear it.");
   fitCanvasToCSS($("test-canvas"));

@@ -53,12 +53,12 @@ function regenerate(force = false) {
     return;
   }
   const name = getCurrentName();
-  const { code, durationSeconds, noteSeconds, events } = renderStrudel(name, { ...state, scope: true });
+  const { code, durationSeconds, noteSeconds, events, byteWeights } = renderStrudel(name, { ...state, scope: true });
   $("code").value = code;
   lastDuration = durationSeconds;
   lastNoteSeconds = noteSeconds;
   lastEvents = events;
-  renderCharViz(name);
+  renderCharViz(name, byteWeights);
   userEdited = false;
   setStatus(
     name ? `Generated for "${name}" (one pass: ${durationSeconds.toFixed(1)}s)` : "Add a name above",
@@ -74,8 +74,8 @@ function liveReeval(code) {
   Promise.resolve(evalFn(code)).catch((e) => console.error("Live re-eval failed:", e));
 }
 
-function renderCharViz(name) {
-  charSpans = mountCharViz($("char-viz"), name);
+function renderCharViz(name, byteWeights) {
+  charSpans = mountCharViz($("char-viz"), name, { byteWeights });
 }
 
 function startViz() {
