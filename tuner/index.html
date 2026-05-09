@@ -35,6 +35,11 @@
         <h2>Scale &amp; Tempo</h2>
 
         <div class="field toggle">
+          <label for="loop-enabled">Loop</label>
+          <input id="loop-enabled" type="checkbox" />
+        </div>
+
+        <div class="field toggle">
           <label for="lock-scale">Lock scale</label>
           <input id="lock-scale" type="checkbox" />
         </div>
@@ -79,6 +84,16 @@
           <label for="note-offset">Note offset</label>
           <input id="note-offset" type="range" min="-24" max="24" step="1" />
           <span class="val" id="note-offset-val"></span>
+        </div>
+        <div class="field">
+          <label for="high-nibble-offset">High nibble offset</label>
+          <input id="high-nibble-offset" type="range" min="-24" max="24" step="1" />
+          <span class="val" id="high-nibble-offset-val"></span>
+        </div>
+        <div class="field">
+          <label for="low-nibble-offset">Low nibble offset</label>
+          <input id="low-nibble-offset" type="range" min="-24" max="24" step="1" />
+          <span class="val" id="low-nibble-offset-val"></span>
         </div>
       </section>
 

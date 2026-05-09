@@ -15,6 +15,7 @@ let lastEvents = 0;
 let charSpans = [];
 let stopTimer = null;
 let cancelVizFn = () => {};
+let isPlaying = false;
 
 function loadState() {
   try {
@@ -51,6 +52,14 @@ function regenerate(force = false) {
     name ? `Generated for "${name}" (one pass: ${durationSeconds.toFixed(1)}s)` : "Type a name above",
     false
   );
+  liveReeval(code);
+}
+
+function liveReeval(code) {
+  if (!isPlaying || !strudelMod) return;
+  const evalFn = strudelMod.evaluate || window.evaluate;
+  if (!evalFn) return;
+  Promise.resolve(evalFn(code)).catch((e) => console.error("Live re-eval failed:", e));
 }
 
 function renderCharViz(name) {
@@ -59,7 +68,7 @@ function renderCharViz(name) {
 
 function startViz() {
   cancelVizFn();
-  cancelVizFn = animateCharViz(charSpans, lastNoteSeconds, lastEvents);
+  cancelVizFn = animateCharViz(charSpans, lastNoteSeconds, lastEvents, !!state.loopEnabled);
 }
 
 function cancelViz() {
@@ -93,13 +102,17 @@ async function onPlay() {
     const evalFn = strudelMod.evaluate || window.evaluate;
     if (!evalFn) throw new Error("Strudel evaluate() not available");
     await evalFn(code);
+    isPlaying = true;
     startViz();
-    if (lastDuration > 0) {
+    if (state.loopEnabled) {
+      setStatus("Looping… click Stop to end.", false);
+    } else if (lastDuration > 0) {
       setStatus(`Playing… auto-stop in ${lastDuration.toFixed(1)}s`, false);
       stopTimer = setTimeout(() => {
         const hush = strudelMod?.hush || window.hush;
         if (hush) hush();
         cancelViz();
+        isPlaying = false;
         setStatus("Done.", false);
         stopTimer = null;
       }, lastDuration * 1000);
@@ -128,6 +141,7 @@ async function onExportDefaults() {
 function onStop() {
   clearStopTimer();
   cancelViz();
+  isPlaying = false;
   try {
     const hush = strudelMod?.hush || window.hush;
     if (hush) hush();
@@ -265,8 +279,10 @@ function init() {
     setStatus("Manually edited — Play uses your edits. Reset to regenerate.", true);
   });
 
+  bindCheckbox("loop-enabled", "loopEnabled");
   bindCheckbox("lock-scale", "lockScale");
   populateDatalist("scale-suggestions", SCALE_POOL);
+  
   bindText("locked-scale", "lockedScale");
 
   bindCheckbox("lock-cpm", "lockCpm");
@@ -277,6 +293,8 @@ function init() {
   bindSizesText("sub-sizes", "subSizes");
   bindIntRange("sub-step", "subStep");
   bindIntRange("note-offset", "noteOffset");
+  bindIntRange("high-nibble-offset", "highNibbleOffset");
+  bindIntRange("low-nibble-offset", "lowNibbleOffset");
 
   bindCheckbox("lead-enabled", "leadEnabled");
   bindSelect("lead-synth", "leadSynth", SYNTHS);
