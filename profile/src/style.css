@@ -124,6 +124,13 @@ button.big { padding: 14px 22px; font-size: 16px; }
   border-radius: 8px;
 }
 
+.loop-btn[aria-pressed="true"] {
+  background: var(--accent);
+  color: #06121c;
+  border-color: transparent;
+  font-weight: 600;
+}
+
 .midi-btn { position: relative; }
 .midi-btn.connected { border-color: var(--accent); color: var(--accent); }
 .midi-btn.connected::before {
@@ -265,18 +272,21 @@ body.midi-learn input.midi-arm {
 
 .tweak-overrides { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
 .tweak-override-row {
-  display: grid;
-  grid-template-columns: 130px 1fr 60px 28px;
-  gap: 8px;
+  display: flex;
   align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
   font-family: ui-monospace, Menlo, monospace;
   font-size: 12px;
 }
-.tweak-override-row label { color: var(--muted); }
-.tweak-override-row .val { color: var(--accent); text-align: right; }
+.tweak-override-row > label { flex: 0 0 130px; color: var(--muted); }
+.tweak-override-row > input[type="range"] { flex: 1 1 auto; min-width: 0; }
+.tweak-override-row > .val { flex: 0 0 56px; color: var(--accent); text-align: right; }
+.tweak-override-row > .midi-cc-tag { flex: 0 0 auto; margin-left: 0; }
 .tweak-override-row.overridden label,
 .tweak-override-row.overridden .val { color: var(--accent-2); }
-.tweak-override-row .reset {
+.tweak-override-row > .reset {
+  flex: 0 0 24px;
   padding: 0;
   width: 24px;
   height: 24px;
@@ -287,7 +297,7 @@ body.midi-learn input.midi-arm {
   cursor: pointer;
   font-size: 14px;
 }
-.tweak-override-row .reset:hover { color: var(--danger); border-color: var(--danger); }
+.tweak-override-row > .reset:hover { color: var(--danger); border-color: var(--danger); }
 
 .tweaks {
   list-style: none;

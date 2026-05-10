@@ -362,7 +362,9 @@ async function onPlay() {
     isPlaying = true;
     const delayMs = nextCycleDelayMs(strudelRepl);
     setTimeout(startViz, delayMs);
-    if (lastDuration > 0) {
+    if (options.loopEnabled) {
+      setStatus("Looping… click Stop to end.");
+    } else if (lastDuration > 0) {
       setStatus(`Playing… auto-stop in ${lastDuration.toFixed(1)}s`);
       stopTimer = setTimeout(() => {
         const hush = strudelMod?.hush || window.hush;
@@ -455,6 +457,15 @@ function init() {
     save: () => saveOptions(options),
     setStatus: (msg, isError) => setStatus(msg, isError ? "error" : ""),
   });
+
+  const loopBtn = $("loop");
+  const syncLoop = () => loopBtn.setAttribute("aria-pressed", options.loopEnabled ? "true" : "false");
+  loopBtn.addEventListener("click", () => {
+    options.loopEnabled = !options.loopEnabled;
+    saveOptions(options);
+    syncLoop();
+  });
+  syncLoop();
   window.addEventListener("hashchange", () => {
     cancelViz();
     clearStopTimer();
