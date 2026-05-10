@@ -101,7 +101,9 @@ function renderTweakOverrides(name) {
   const autoEffective = autoTweakOptions(name, baseOptions);
 
   container.innerHTML = "";
+  const hiddenInUi = new Set(["leadGain"]);
   for (const [key, range] of Object.entries(TWEAK_RANGES)) {
+    if (hiddenInUi.has(key)) continue;
     const autoVal = readEffective(autoEffective, key);
     const overrideVal = overrides[key];
     const isOverridden = overrideVal !== undefined;
