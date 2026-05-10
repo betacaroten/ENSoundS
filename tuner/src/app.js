@@ -157,13 +157,27 @@ function setStatus(msg, dirty) {
   el.classList.toggle("dirty", !!dirty);
 }
 
+// Kick off Strudel load at module init so initAudioOnFirstClick's listener
+// is on document BEFORE the user's first click. Otherwise the audio worklet
+// only loads on the second click and first-play sounds wrong.
+const strudelInit = (async () => {
+  const mod = await import("@strudel/web");
+  const repl = await mod.initStrudel({ prebake: () => {} });
+  return { mod, repl };
+})().catch((e) => { console.error("Strudel preload failed:", e); throw e; });
+
 async function ensureStrudel() {
   if (strudelReady) return;
   setStatus("Loading Strudel…", false);
-  strudelMod = await import("@strudel/web");
-  strudelRepl = await strudelMod.initStrudel({
-    prebake: () => {},
-  });
+  const { mod, repl } = await strudelInit;
+  strudelMod = mod;
+  strudelRepl = repl;
+  // Silent warmup so the first audible play matches subsequent plays.
+  try {
+    await mod.evaluate('s("sine").gain(0)');
+    await new Promise((r) => setTimeout(r, 200));
+    mod.hush?.();
+  } catch (e) { console.warn("Strudel warmup:", e); }
   strudelReady = true;
   setStatus("Strudel ready.", false);
 }

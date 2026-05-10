@@ -95,11 +95,23 @@ function startViz(noteSeconds, totalEvents) {
   cancelVizFn = animateCharViz(charSpans, noteSeconds, totalEvents);
 }
 
+const strudelInit = (async () => {
+  const mod = await import("@strudel/web");
+  const repl = await mod.initStrudel({ prebake: () => {} });
+  return { mod, repl };
+})().catch((e) => { console.error("Strudel preload failed:", e); throw e; });
+
 async function ensureStrudel() {
   if (strudelReady) return;
   setStatus("Loading audio engine…");
-  strudelMod = await import("@strudel/web");
-  strudelRepl = await strudelMod.initStrudel({ prebake: () => {} });
+  const { mod, repl } = await strudelInit;
+  strudelMod = mod;
+  strudelRepl = repl;
+  try {
+    await mod.evaluate('s("sine").gain(0)');
+    await new Promise((r) => setTimeout(r, 200));
+    mod.hush?.();
+  } catch (e) { console.warn("Strudel warmup:", e); }
   strudelReady = true;
 }
 
