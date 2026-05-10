@@ -266,6 +266,18 @@ body.midi-learn .adsr-grid input.midi-arm {
   50%      { outline-offset: 5px; }
 }
 
+.nibble-map-log {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+.nibble-map-log span { color: var(--accent); }
+.nibble-map-log b { color: var(--fg); font-weight: 600; margin-right: 2px; }
+
 .tweaks-panel { margin-top: 16px; }
 .tweaks-panel summary { cursor: pointer; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
 .tweaks-panel[open] summary { color: var(--fg); }

@@ -63,6 +63,7 @@ function regenerate(force = false) {
   lastEvents = events;
   renderCharViz(name, byteWeights);
   renderTweaks(effectiveOptions || state);
+  renderNibbleMapLog((effectiveOptions || state).nibbleMap);
   userEdited = false;
   setStatus(
     name ? `Generated for "${name}" (one pass: ${durationSeconds.toFixed(1)}s)` : "Add a name above",
@@ -80,6 +81,19 @@ function liveReeval(code) {
 
 function renderCharViz(name, byteWeights) {
   charSpans = mountCharViz($("char-viz"), name, { byteWeights });
+}
+
+function renderNibbleMapLog(map) {
+  const el = $("nibble-map-log");
+  if (!el) return;
+  if (!Array.isArray(map) || map.length !== 16) {
+    el.textContent = "";
+    return;
+  }
+  const cells = map
+    .map((v, i) => `<span><b>${i.toString(16).toUpperCase()}</b>→${v}</span>`)
+    .join("");
+  el.innerHTML = `<span class="muted">nibble → note: </span>${cells}`;
 }
 
 function renderTweaks(opts) {
@@ -545,6 +559,17 @@ function init() {
     if (!confirm("Wipe saved tweaks and load defaults from file?")) return;
     localStorage.removeItem("ens-tuner-state-v1");
     location.reload();
+  });
+  $("shuffle-nibbles").addEventListener("click", () => {
+    const map = [-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7];
+    for (let i = map.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [map[i], map[j]] = [map[j], map[i]];
+    }
+    state.nibbleMap = map;
+    saveState();
+    regenerate(true);
+    setStatus(`Nibble map shuffled: [${map.join(", ")}]`, false);
   });
   $("export-defaults").addEventListener("click", onExportDefaults);
   $("midi").addEventListener("click", onMidiClick);
