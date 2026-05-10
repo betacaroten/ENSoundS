@@ -1,6 +1,7 @@
 import { renderStrudel } from "../../lib/generator.js";
 import { SCALE_POOL, SYNTHS } from "../../lib/mapping.js";
 import { loadOptions, saveOptions } from "../../lib/state.js";
+import { defaults as fileDefaults } from "../../lib/defaults.js";
 import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs, fitCanvasToCSS } from "../../lib/charviz.js";
 import { connectMIDI, onCC, midiSupported, listInputs } from "../../lib/midi.js";
 
@@ -54,12 +55,14 @@ function regenerate(force = false) {
     return;
   }
   const name = getCurrentName();
-  const { code, durationSeconds, noteSeconds, events, byteWeights } = renderStrudel(name, { ...state, scope: true });
+  const result = renderStrudel(name, { ...state, scope: true });
+  const { code, durationSeconds, noteSeconds, events, byteWeights, effectiveOptions } = result;
   $("code").value = code;
   lastDuration = durationSeconds;
   lastNoteSeconds = noteSeconds;
   lastEvents = events;
   renderCharViz(name, byteWeights);
+  renderTweaks(effectiveOptions || state);
   userEdited = false;
   setStatus(
     name ? `Generated for "${name}" (one pass: ${durationSeconds.toFixed(1)}s)` : "Add a name above",
@@ -77,6 +80,50 @@ function liveReeval(code) {
 
 function renderCharViz(name, byteWeights) {
   charSpans = mountCharViz($("char-viz"), name, { byteWeights });
+}
+
+function renderTweaks(opts) {
+  const container = $("tweaks-list");
+  if (!container) return;
+  container.innerHTML = "";
+  const skip = new Set(["midiBindings"]);
+  const diffs = [];
+  for (const k of Object.keys(fileDefaults)) {
+    if (skip.has(k)) continue;
+    if (JSON.stringify(opts[k]) === JSON.stringify(fileDefaults[k])) continue;
+    diffs.push({ key: k, current: opts[k], def: fileDefaults[k] });
+  }
+  if (diffs.length === 0) {
+    const p = document.createElement("p");
+    p.className = "muted";
+    p.textContent = "No tweaks — using file defaults.";
+    container.appendChild(p);
+    return;
+  }
+  for (const d of diffs) {
+    const li = document.createElement("li");
+    li.innerHTML = `<code>${d.key}</code>: ${formatTweakDiff(d.current, d.def)}`;
+    container.appendChild(li);
+  }
+}
+
+function formatTweakDiff(cur, def) {
+  if (typeof cur === "number" && typeof def === "number") {
+    const delta = cur - def;
+    const sign = delta > 0 ? "+" : "";
+    const round = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(3).replace(/\.?0+$/, ""));
+    return `<b>${round(cur)}</b> <span class="muted">(was ${round(def)}, ${sign}${round(delta)})</span>`;
+  }
+  if (typeof cur === "string" && typeof def === "string") {
+    return `<b>"${cur}"</b> <span class="muted">(was "${def}")</span>`;
+  }
+  if (typeof cur === "boolean") {
+    return `<b>${cur}</b> <span class="muted">(was ${def})</span>`;
+  }
+  if (Array.isArray(cur) && Array.isArray(def)) {
+    return `<b>[${cur.join(", ")}]</b> <span class="muted">(was [${def.join(", ")}])</span>`;
+  }
+  return `<b>${JSON.stringify(cur)}</b> <span class="muted">(was ${JSON.stringify(def)})</span>`;
 }
 
 function startViz() {
