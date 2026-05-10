@@ -135,7 +135,9 @@ async function playName(entry) {
     setStatus("Audio error: " + (e.message || e), "error");
   }
   if (currentTimer) clearTimeout(currentTimer);
-  const ms = Math.max(500, delayMs + r.durationSeconds * 1000);
+  const integerCycles = Math.max(1, Math.ceil(r.events));
+  const effectiveDuration = integerCycles * r.noteSeconds;
+  const ms = Math.max(500, delayMs + effectiveDuration * 1000 - 100);
   currentTimer = setTimeout(() => {
     currentTimer = null;
     current = null;
