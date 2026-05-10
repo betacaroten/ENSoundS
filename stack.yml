@@ -1,0 +1,31 @@
+services:
+  web:
+    image: lumir/ensounds:latest
+    isolation: default
+    networks:
+      - default
+      - gateway
+    logging:
+      driver: json-file
+    deploy:
+      replicas: 1
+      update_config:
+        order: start-first
+        parallelism: 1
+        failure_action: rollback
+      restart_policy:
+        condition: any
+      labels:
+        traefik.enable: "true"
+        traefik.docker.network: gateway
+        traefik.http.routers.ensounds.rule: Host(`ensounds.mrq.cz`)
+        traefik.http.routers.ensounds.tls: "true"
+        traefik.http.routers.ensounds.tls.certresolver: myresolver
+        traefik.http.services.ensounds.loadbalancer.server.port: "3000"
+        swarmpit.service.deployment.autoredeploy: "true"
+
+networks:
+  default:
+    driver: overlay
+  gateway:
+    external: true

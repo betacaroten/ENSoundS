@@ -1,0 +1,8 @@
+node_modules
+dist
+.git
+.idea
+.env
+.mcp.json
+.claude
+*.log
