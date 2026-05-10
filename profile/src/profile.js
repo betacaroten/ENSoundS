@@ -2,6 +2,8 @@ import { renderStrudel } from "../../lib/generator.js";
 import { normalize } from "../../lib/mapping.js";
 import { loadOptions } from "../../lib/state.js";
 import { defaults as fileDefaults } from "../../lib/defaults.js";
+import { TWEAK_RANGES, autoTweakOptions } from "../../lib/tweaks.js";
+import { saveOptions } from "../../lib/state.js";
 
 let options = loadOptions();
 let isPlaying = false;
@@ -86,6 +88,98 @@ function clearStopTimer() {
   }
 }
 
+function renderTweakOverrides(name) {
+  const container = $("tweak-overrides");
+  if (!container) return;
+  const normalized = normalize(name);
+  if (!normalized) {
+    container.innerHTML = "";
+    return;
+  }
+  const overrides = (options.perNameTweaks && options.perNameTweaks[normalized]) || {};
+  // Compute the auto value for each tweakable param at the *base* options (no override)
+  const baseOptions = { ...options, perNameTweaks: {} };
+  const autoEffective = autoTweakOptions(name, baseOptions);
+
+  container.innerHTML = "";
+  for (const [key, range] of Object.entries(TWEAK_RANGES)) {
+    const autoVal = readEffective(autoEffective, key);
+    const overrideVal = overrides[key];
+    const isOverridden = overrideVal !== undefined;
+    const current = isOverridden ? overrideVal : autoVal;
+
+    const row = document.createElement("div");
+    row.className = "tweak-override-row";
+    row.innerHTML = `
+      <label>${range.label}</label>
+      <input type="range" min="${range.min}" max="${range.max}" step="${range.step}" value="${current}" />
+      <span class="val"></span>
+      <button class="reset" title="Use auto">×</button>
+    `;
+    const slider = row.querySelector("input");
+    const valEl = row.querySelector(".val");
+    const resetBtn = row.querySelector(".reset");
+    const formatVal = (v) =>
+      Number.isInteger(range.step) ? String(Math.round(v)) : (+v).toFixed(2);
+    valEl.textContent = formatVal(current);
+    if (isOverridden) row.classList.add("overridden");
+
+    slider.addEventListener("input", () => {
+      const v = parseFloat(slider.value);
+      valEl.textContent = formatVal(v);
+      setTweakOverride(normalized, key, v);
+      row.classList.add("overridden");
+    });
+    resetBtn.addEventListener("click", () => {
+      clearTweakOverride(normalized, key);
+      slider.value = autoVal;
+      valEl.textContent = formatVal(autoVal);
+      row.classList.remove("overridden");
+    });
+    container.appendChild(row);
+  }
+}
+
+function readEffective(opts, key) {
+  if (key === "leadAttack") return opts.leadAdsr?.[0] ?? 0;
+  if (key === "leadRelease") return opts.leadAdsr?.[3] ?? 0;
+  return opts[key];
+}
+
+function setTweakOverride(name, key, value) {
+  if (!options.perNameTweaks || typeof options.perNameTweaks !== "object") {
+    options.perNameTweaks = {};
+  }
+  if (!options.perNameTweaks[name]) options.perNameTweaks[name] = {};
+  options.perNameTweaks[name][key] = value;
+  saveOptions(options);
+  if (currentName) {
+    const r = renderStrudel(currentName, { ...options, scope: true });
+    $("code").textContent = r.code;
+    if (isPlaying && strudelMod) {
+      const fn = strudelMod.evaluate || window.evaluate;
+      if (fn) Promise.resolve(fn(r.code)).catch((err) => console.error(err));
+    }
+  }
+}
+
+function clearTweakOverride(name, key) {
+  if (!options.perNameTweaks || !options.perNameTweaks[name]) return;
+  delete options.perNameTweaks[name][key];
+  if (Object.keys(options.perNameTweaks[name]).length === 0) {
+    delete options.perNameTweaks[name];
+  }
+  saveOptions(options);
+  if (currentName) {
+    const r = renderStrudel(currentName, { ...options, scope: true });
+    $("code").textContent = r.code;
+    if (isPlaying && strudelMod) {
+      const fn = strudelMod.evaluate || window.evaluate;
+      if (fn) Promise.resolve(fn(r.code)).catch((err) => console.error(err));
+    }
+  }
+}
+
 function renderTweaks(container, opts) {
   if (!container) return;
   container.innerHTML = "";
@@ -160,6 +254,7 @@ function renderProfile(name) {
   $("meta-duration").textContent = result.durationSeconds.toFixed(2) + "s";
   $("meta-bytes").textContent = bytesToHex(bytes) || "(empty)";
   renderTweaks($("meta-tweaks"), result.effectiveOptions || options);
+  renderTweakOverrides(name);
 
   lastEvents = result.events;
   lastNoteSeconds = result.noteSeconds;
