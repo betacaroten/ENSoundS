@@ -36,6 +36,17 @@
           <input id="loop-enabled" type="checkbox" />
         </div>
 
+        <div class="field toggle">
+          <label for="lock-scale">Lock scale</label>
+          <input id="lock-scale" type="checkbox" />
+        </div>
+        <div class="field">
+          <label for="locked-scale">Scale</label>
+          <input id="locked-scale" type="text" list="scale-suggestions" autocomplete="off" placeholder="(auto from name)" />
+          <span class="val"></span>
+        </div>
+        <datalist id="scale-suggestions"></datalist>
+
         <div class="field">
           <label for="locked-cpm">CPM</label>
           <input id="locked-cpm" type="range" min="40" max="400" step="1" />
