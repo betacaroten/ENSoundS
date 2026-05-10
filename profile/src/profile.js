@@ -159,7 +159,7 @@ function renderProfile(name) {
   $("meta-events").textContent = String(result.events);
   $("meta-duration").textContent = result.durationSeconds.toFixed(2) + "s";
   $("meta-bytes").textContent = bytesToHex(bytes) || "(empty)";
-  renderTweaks($("meta-tweaks"), options);
+  renderTweaks($("meta-tweaks"), result.effectiveOptions || options);
 
   lastEvents = result.events;
   lastNoteSeconds = result.noteSeconds;
