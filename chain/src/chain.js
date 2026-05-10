@@ -118,6 +118,8 @@ async function evaluateIdle() {
   try { await evalStrudel(IDLE_DRONE); } catch (e) { console.error(e); }
 }
 
+const NAME_GAP_MS = 500;
+
 async function playName(entry) {
   current = entry;
   const r = renderStrudel(entry.name, { ...options, scope: true, droneEnabled: false });
@@ -135,23 +137,24 @@ async function playName(entry) {
     setStatus("Audio error: " + (e.message || e), "error");
   }
   if (currentTimer) clearTimeout(currentTimer);
-  const integerCycles = Math.max(1, Math.ceil(r.events));
-  const effectiveDuration = integerCycles * r.noteSeconds;
-  const ms = Math.max(500, delayMs + effectiveDuration * 1000 - 100);
+  const audibleMs = delayMs + r.durationSeconds * 1000;
   currentTimer = setTimeout(() => {
-    currentTimer = null;
-    current = null;
+    hush();
     clearViz();
     $("now-playing").textContent = "—";
     $("now-playing-row").classList.remove("on");
-    if (queue.length) {
-      const next = queue.shift();
-      renderQueue();
-      playName(next);
-    } else {
-      evaluateIdle();
-    }
-  }, ms);
+    currentTimer = setTimeout(() => {
+      currentTimer = null;
+      current = null;
+      if (queue.length) {
+        const next = queue.shift();
+        renderQueue();
+        playName(next);
+      } else {
+        evaluateIdle();
+      }
+    }, NAME_GAP_MS);
+  }, audibleMs);
 }
 
 function enqueueName(entry) {
