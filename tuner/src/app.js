@@ -461,8 +461,6 @@ function handleCC(channel, cc, value, deviceName) {
   let matched = false;
   for (const [id, b] of Object.entries(bindings)) {
     if (b.cc !== cc) continue;
-    if (b.channel != null && b.channel !== channel) continue;
-    if (b.deviceName && b.deviceName !== deviceName) continue;
     midiPendingCC.set(id, value);
     matched = true;
   }
