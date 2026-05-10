@@ -491,8 +491,6 @@ function init() {
   bindIntRange("note-offset", "noteOffset");
   bindIntRange("high-nibble-offset", "highNibbleOffset");
   bindIntRange("low-nibble-offset", "lowNibbleOffset");
-  bindCheckbox("byte-as-sum", "byteAsSum");
-  bindCheckbox("byte-as-rhythm", "byteAsRhythm");
 
   bindCheckbox("lead-enabled", "leadEnabled");
   bindSelect("lead-synth", "leadSynth", SYNTHS);
