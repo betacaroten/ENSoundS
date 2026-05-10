@@ -124,6 +124,48 @@ button.big { padding: 14px 22px; font-size: 16px; }
   border-radius: 8px;
 }
 
+.midi-btn { position: relative; }
+.midi-btn.connected { border-color: var(--accent); color: var(--accent); }
+.midi-btn.connected::before {
+  content: "● ";
+  color: #6bdc8e;
+}
+.midi-btn.learn {
+  background: var(--accent-2);
+  color: #06121c;
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.midi-cc-tag {
+  display: inline-block;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 10px;
+  color: var(--accent);
+  background: rgba(124,209,255,0.12);
+  padding: 1px 6px;
+  border-radius: 6px;
+  margin-left: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+.midi-cc-tag:hover { background: rgba(124,209,255,0.24); }
+
+body.midi-learn input[type="range"],
+body.midi-learn input[type="checkbox"] {
+  outline: 1px dashed rgba(255,184,107,0.5);
+  outline-offset: 2px;
+  cursor: crosshair;
+}
+body.midi-learn input.midi-arm {
+  outline: 2px solid var(--accent-2);
+  animation: midi-pulse 0.8s ease-in-out infinite;
+}
+@keyframes midi-pulse {
+  0%, 100% { outline-offset: 2px; }
+  50%      { outline-offset: 5px; }
+}
+
 .register-banner {
   margin-top: 18px;
   padding: 14px 18px;

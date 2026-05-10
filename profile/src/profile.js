@@ -17,6 +17,7 @@ window.addEventListener("storage", (e) => {
   }
 });
 import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs, fitCanvasToCSS } from "../../lib/charviz.js";
+import { setupMidi } from "../../lib/midi-ui.js";
 import { createPublicClient, http, fallback } from "viem";
 import { mainnet } from "viem/chains";
 
@@ -113,7 +114,7 @@ function renderTweakOverrides(name) {
     row.className = "tweak-override-row";
     row.innerHTML = `
       <label>${range.label}</label>
-      <input type="range" min="${range.min}" max="${range.max}" step="${range.step}" value="${current}" />
+      <input id="tweak-${key}" type="range" min="${range.min}" max="${range.max}" step="${range.step}" value="${current}" />
       <span class="val"></span>
       <button class="reset" title="Use auto">×</button>
     `;
@@ -265,6 +266,7 @@ function renderProfile(name) {
   $("tune-link").href = "../tuner/?name=" + encodeURIComponent(name);
   setStatus("Tap Play to hear it.");
   fitCanvasToCSS($("test-canvas"));
+  midi?.refresh();
   checkEnsRegistration(name);
 }
 
@@ -438,6 +440,8 @@ function route() {
   renderProfile(name);
 }
 
+let midi = null;
+
 function init() {
   $("play").addEventListener("click", onPlay);
   $("stop").addEventListener("click", onStop);
@@ -445,6 +449,12 @@ function init() {
   $("back").addEventListener("click", onBack);
   $("landing-form").addEventListener("submit", onLanding);
   $("examples").addEventListener("click", onExamples);
+  midi = setupMidi({
+    button: $("midi"),
+    state: options,
+    save: () => saveOptions(options),
+    setStatus: (msg, isError) => setStatus(msg, isError ? "error" : ""),
+  });
   window.addEventListener("hashchange", () => {
     cancelViz();
     clearStopTimer();
