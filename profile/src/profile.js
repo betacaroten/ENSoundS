@@ -1,9 +1,8 @@
 import { renderStrudel } from "../../lib/generator.js";
 import { normalize } from "../../lib/mapping.js";
-import { loadOptions } from "../../lib/state.js";
+import { loadOptions, saveOptions } from "../../lib/state.js";
 import { defaults as fileDefaults } from "../../lib/defaults.js";
 import { TWEAK_RANGES, autoTweakOptions } from "../../lib/tweaks.js";
-import { saveOptions } from "../../lib/state.js";
 
 let options = loadOptions();
 let isPlaying = false;
