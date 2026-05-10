@@ -4,11 +4,15 @@ import { loadOptions, saveOptions } from "../../lib/state.js";
 import { defaults as fileDefaults } from "../../lib/defaults.js";
 import { TWEAK_RANGES, autoTweakOptions } from "../../lib/tweaks.js";
 
-let options = loadOptions();
+const options = loadOptions();
 let isPlaying = false;
 window.addEventListener("storage", (e) => {
   if (e.key !== "ens-tuner-state-v1") return;
-  options = loadOptions();
+  // Mutate in place so callers that captured the reference (setupMidi)
+  // see the fresh values.
+  const fresh = loadOptions();
+  for (const k of Object.keys(options)) delete options[k];
+  Object.assign(options, fresh);
   if (currentName) renderProfile(currentName);
   if (isPlaying && strudelMod && currentName) {
     const { code } = renderStrudel(currentName, { ...options, scope: true });
@@ -457,6 +461,10 @@ function init() {
     save: () => saveOptions(options),
     setStatus: (msg, isError) => setStatus(msg, isError ? "error" : ""),
   });
+  const bindingCount = Object.keys(options.midiBindings || {}).length;
+  if (bindingCount > 0) {
+    console.log("MIDI bindings loaded from localStorage:", options.midiBindings);
+  }
 
   const loopBtn = $("loop");
   const syncLoop = () => loopBtn.setAttribute("aria-pressed", options.loopEnabled ? "true" : "false");
