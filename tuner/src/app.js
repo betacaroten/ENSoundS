@@ -363,22 +363,23 @@ function handleCC(channel, cc, value, deviceName) {
     return;
   }
   const bindings = state.midiBindings || {};
-  let target = null;
+  let matched = false;
   for (const [id, b] of Object.entries(bindings)) {
-    if (b.cc === cc) { target = id; break; }
+    if (b.cc !== cc) continue;
+    if (b.channel != null && b.channel !== channel) continue;
+    if (b.deviceName && b.deviceName !== deviceName) continue;
+    midiPendingCC.set(id, value);
+    matched = true;
   }
-  if (target) {
-    midiPendingCC.set(target, value);
-    if (!midiRaf) {
-      midiRaf = requestAnimationFrame(() => {
-        midiRaf = 0;
-        for (const [id, v] of midiPendingCC) {
-          applyMidiValue(document.getElementById(id), v);
-        }
-        midiPendingCC.clear();
-      });
-    }
-  } else {
+  if (matched && !midiRaf) {
+    midiRaf = requestAnimationFrame(() => {
+      midiRaf = 0;
+      for (const [id, v] of midiPendingCC) {
+        applyMidiValue(document.getElementById(id), v);
+      }
+      midiPendingCC.clear();
+    });
+  } else if (!matched) {
     console.log(`MIDI in: device=${deviceName} ch=${channel} cc=${cc} val=${value}`);
   }
 }

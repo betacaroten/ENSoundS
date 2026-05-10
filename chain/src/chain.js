@@ -1,7 +1,10 @@
 import { renderStrudel } from "../../lib/generator.js";
 import { loadOptions } from "../../lib/state.js";
 
-const options = loadOptions();
+let options = loadOptions();
+window.addEventListener("storage", (e) => {
+  if (e.key === "ens-tuner-state-v1") options = loadOptions();
+});
 import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs, fitCanvasToCSS } from "../../lib/charviz.js";
 import {
   DEFAULT_RPC,

@@ -2,7 +2,18 @@ import { renderStrudel } from "../../lib/generator.js";
 import { normalize } from "../../lib/mapping.js";
 import { loadOptions } from "../../lib/state.js";
 
-const options = loadOptions();
+let options = loadOptions();
+let isPlaying = false;
+window.addEventListener("storage", (e) => {
+  if (e.key !== "ens-tuner-state-v1") return;
+  options = loadOptions();
+  if (currentName) renderProfile(currentName);
+  if (isPlaying && strudelMod && currentName) {
+    const { code } = renderStrudel(currentName, { ...options, scope: true });
+    const fn = strudelMod.evaluate || window.evaluate;
+    if (fn) Promise.resolve(fn(code)).catch((err) => console.error(err));
+  }
+});
 import { mountCharViz, animateCharViz, clearCharViz, nextCycleDelayMs, fitCanvasToCSS } from "../../lib/charviz.js";
 import { createPublicClient, http, fallback } from "viem";
 import { mainnet } from "viem/chains";
@@ -191,6 +202,7 @@ async function onPlay() {
     if (!evalFn) throw new Error("Strudel evaluate() not available");
     const { code } = renderStrudel(currentName, { ...options, scope: true });
     await evalFn(code);
+    isPlaying = true;
     const delayMs = nextCycleDelayMs(strudelRepl);
     setTimeout(startViz, delayMs);
     if (lastDuration > 0) {
@@ -199,6 +211,7 @@ async function onPlay() {
         const hush = strudelMod?.hush || window.hush;
         if (hush) hush();
         cancelViz();
+        isPlaying = false;
         setStatus("Done.");
         stopTimer = null;
       }, Math.max(0, delayMs + lastDuration * 1000 - 100));
@@ -214,6 +227,7 @@ async function onPlay() {
 function onStop() {
   clearStopTimer();
   cancelViz();
+  isPlaying = false;
   try {
     const hush = strudelMod?.hush || window.hush;
     if (hush) hush();
@@ -243,6 +257,7 @@ function onBack(e) {
   e.preventDefault();
   cancelViz();
   clearStopTimer();
+  isPlaying = false;
   const hush = strudelMod?.hush || window.hush;
   if (hush) try { hush(); } catch {}
   history.pushState("", document.title, location.pathname + location.search);
