@@ -221,6 +221,18 @@ button.big { padding: 14px 22px; font-size: 16px; }
 .meta .k { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
 .meta .v { display: block; font-family: ui-monospace, Menlo, monospace; font-size: 14px; color: var(--accent); margin-top: 2px; }
 
+.tweaks {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 12px;
+}
+.tweaks li { padding: 4px 0; border-bottom: 1px solid #1a1f29; }
+.tweaks li:last-child { border-bottom: 0; }
+.tweaks code { color: var(--accent); }
+.tweaks b { color: var(--fg); font-weight: 600; }
+
 .bytes-row { margin-top: 14px; }
 .bytes-row .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px; }
 .bytes {

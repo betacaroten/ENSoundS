@@ -1,6 +1,7 @@
 import { renderStrudel } from "../../lib/generator.js";
 import { normalize } from "../../lib/mapping.js";
 import { loadOptions } from "../../lib/state.js";
+import { defaults as fileDefaults } from "../../lib/defaults.js";
 
 let options = loadOptions();
 let isPlaying = false;
@@ -85,6 +86,51 @@ function clearStopTimer() {
   }
 }
 
+function renderTweaks(container, opts) {
+  if (!container) return;
+  container.innerHTML = "";
+  const skip = new Set(["midiBindings"]);
+  const diffs = [];
+  for (const k of Object.keys(fileDefaults)) {
+    if (skip.has(k)) continue;
+    const cur = opts[k];
+    const def = fileDefaults[k];
+    if (JSON.stringify(cur) === JSON.stringify(def)) continue;
+    diffs.push({ key: k, current: cur, def });
+  }
+  if (diffs.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = "No tweaks — using file defaults.";
+    container.appendChild(empty);
+    return;
+  }
+  for (const d of diffs) {
+    const li = document.createElement("li");
+    li.innerHTML = `<code>${d.key}</code>: ${formatDiff(d.current, d.def)}`;
+    container.appendChild(li);
+  }
+}
+
+function formatDiff(cur, def) {
+  if (typeof cur === "number" && typeof def === "number") {
+    const delta = cur - def;
+    const sign = delta > 0 ? "+" : "";
+    const round = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(3).replace(/\.?0+$/, ""));
+    return `<b>${round(cur)}</b> <span class="muted">(was ${round(def)}, ${sign}${round(delta)})</span>`;
+  }
+  if (typeof cur === "string" && typeof def === "string") {
+    return `<b>"${cur}"</b> <span class="muted">(was "${def}")</span>`;
+  }
+  if (typeof cur === "boolean") {
+    return `<b>${cur}</b> <span class="muted">(was ${def})</span>`;
+  }
+  if (Array.isArray(cur) && Array.isArray(def)) {
+    return `<b>[${cur.join(", ")}]</b> <span class="muted">(was [${def.join(", ")}])</span>`;
+  }
+  return `<b>${JSON.stringify(cur)}</b> <span class="muted">(was ${JSON.stringify(def)})</span>`;
+}
+
 function bytesToHex(bytes) {
   const out = [];
   for (const b of bytes) out.push(b.toString(16).padStart(2, "0"));
@@ -113,6 +159,7 @@ function renderProfile(name) {
   $("meta-events").textContent = String(result.events);
   $("meta-duration").textContent = result.durationSeconds.toFixed(2) + "s";
   $("meta-bytes").textContent = bytesToHex(bytes) || "(empty)";
+  renderTweaks($("meta-tweaks"), options);
 
   lastEvents = result.events;
   lastNoteSeconds = result.noteSeconds;

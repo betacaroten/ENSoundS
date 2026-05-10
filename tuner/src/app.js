@@ -494,6 +494,11 @@ function init() {
   });
   $("play-all").addEventListener("click", onPlayAll);
   $("reset").addEventListener("click", () => regenerate(true));
+  $("reset-state").addEventListener("click", () => {
+    if (!confirm("Wipe saved tweaks and load defaults from file?")) return;
+    localStorage.removeItem("ens-tuner-state-v1");
+    location.reload();
+  });
   $("export-defaults").addEventListener("click", onExportDefaults);
   $("midi").addEventListener("click", onMidiClick);
   $("midi-export").addEventListener("click", onExportMidi);
